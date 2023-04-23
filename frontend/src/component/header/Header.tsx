@@ -1,23 +1,23 @@
-import "./header.css"
-import React, { useState } from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBars, faX } from '@fortawesome/free-solid-svg-icons'
+import './header.css'
+import React, {useState} from 'react'
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faBars, faX} from '@fortawesome/free-solid-svg-icons'
 
 const Header = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
+    setIsOpen(!isOpen)
+  }
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <div className={`navbar-brand ${isOpen ? "hidden" : ""}`}>
+        <div className={`navbar-brand ${isOpen ? 'hidden' : ''}`}>
           <h1>Video Platform</h1>
         </div>
 
-        <div className={`navbar-menu ${isOpen ? "active" : ""}`}>
+        <div className={`navbar-menu ${isOpen ? 'active' : ''}`}>
           <ul className="navbar-list">
             <li className="navbar-item">
               <a href="#home" className="navbar-link" onClick={toggleMenu}>
@@ -38,12 +38,15 @@ const Header = () => {
         </div>
 
         <div className="navbar-toggle" onClick={toggleMenu}>
-          {isOpen ? <FontAwesomeIcon icon={faX} /> : <FontAwesomeIcon icon={faBars} />}
+          {isOpen ? (
+            <FontAwesomeIcon icon={faX} />
+          ) : (
+            <FontAwesomeIcon icon={faBars} />
+          )}
         </div>
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export { Header };
-
+export {Header}

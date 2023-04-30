@@ -13,42 +13,53 @@ const Video = () => {
 
   const [activeBtn, setActiveBtn] = useState('none')
 
+  const [animationState, setAnimationState] = useState({
+    likeAnimate: true,
+    dislikeAnimate: true,
+  })
+
+  const handleAnimation = (key: string) => {
+    setAnimationState((prevState) => ({
+      ...prevState,
+      [key]: false,
+    }))
+
+    setTimeout(() => {
+      setAnimationState((prevState) => ({
+        ...prevState,
+        [key]: true,
+      }))
+    }, 1000)
+  }
+
   const handleLikeClick = () => {
+    handleAnimation('likeAnimate')
+
     if (activeBtn === 'none') {
-      setLikeCount(likeCount + 1)
+      setLikeCount((prevCount) => prevCount + 1)
       setActiveBtn('like')
-      return
-    }
-
-    if (activeBtn === 'like') {
-      setLikeCount(likeCount - 1)
+    } else if (activeBtn === 'like') {
+      setLikeCount((prevCount) => prevCount - 1)
       setActiveBtn('none')
-      return
-    }
-
-    if (activeBtn === 'dislike') {
-      setLikeCount(likeCount + 1)
-      setDislikeCount(dislikeCount - 1)
+    } else if (activeBtn === 'dislike') {
+      setLikeCount((prevCount) => prevCount + 1)
+      setDislikeCount((prevCount) => prevCount - 1)
       setActiveBtn('like')
     }
   }
 
-  const handleDisikeClick = () => {
+  const handleDislikeClick = () => {
+    handleAnimation('dislikeAnimate')
+
     if (activeBtn === 'none') {
-      setDislikeCount(dislikeCount + 1)
+      setDislikeCount((prevCount) => prevCount + 1)
       setActiveBtn('dislike')
-      return
-    }
-
-    if (activeBtn === 'dislike') {
-      setDislikeCount(dislikeCount - 1)
+    } else if (activeBtn === 'dislike') {
+      setDislikeCount((prevCount) => prevCount - 1)
       setActiveBtn('none')
-      return
-    }
-
-    if (activeBtn === 'like') {
-      setDislikeCount(dislikeCount + 1)
-      setLikeCount(likeCount - 1)
+    } else if (activeBtn === 'like') {
+      setDislikeCount((prevCount) => prevCount + 1)
+      setLikeCount((prevCount) => prevCount - 1)
       setActiveBtn('dislike')
     }
   }
@@ -74,16 +85,22 @@ const Video = () => {
           className={`btn ${activeBtn === 'like' ? 'like-active' : ''} toolto`}
           onClick={handleLikeClick}
           aria-label="Like">
-          <FontAwesomeIcon icon={faThumbsUp} />
+          <FontAwesomeIcon
+            icon={faThumbsUp}
+            beat={!animationState.likeAnimate}
+          />
           {likeCount}
         </button>
 
         <button
           title="I dislike this video"
           className={`btn ${activeBtn === 'dislike' ? 'dislike-active' : ''}`}
-          onClick={handleDisikeClick}
+          onClick={handleDislikeClick}
           aria-label="Dislike">
-          <FontAwesomeIcon icon={faThumbsDown} />
+          <FontAwesomeIcon
+            icon={faThumbsDown}
+            beat={!animationState.dislikeAnimate}
+          />
           {dislikeCount}
         </button>
 

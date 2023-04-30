@@ -52,6 +52,7 @@ const Header = () => {
         <button
           className="navbar-toggle"
           aria-expanded={isOpen}
+          aria-label={isOpen ? 'Close Menu' : 'Open Menu'}
           onClick={toggleMenu}>
           {isOpen ? (
             <FontAwesomeIcon icon={faX} />

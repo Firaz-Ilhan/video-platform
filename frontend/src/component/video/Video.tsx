@@ -82,12 +82,12 @@ const Video = () => {
       <div className="feedback">
         <button
           title="I like this video"
-          className={`btn ${activeBtn === 'like' ? 'like-active' : ''} toolto`}
+          className={`btn ${activeBtn === 'like' ? 'like-active' : ''}`}
           onClick={handleLikeClick}
           aria-label="Like">
           <FontAwesomeIcon
             icon={faThumbsUp}
-            beat={!animationState.likeAnimate}
+            bounce={!animationState.likeAnimate}
           />
           {likeCount}
         </button>
@@ -99,7 +99,7 @@ const Video = () => {
           aria-label="Dislike">
           <FontAwesomeIcon
             icon={faThumbsDown}
-            beat={!animationState.dislikeAnimate}
+            bounce={!animationState.dislikeAnimate}
           />
           {dislikeCount}
         </button>

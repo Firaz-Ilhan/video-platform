@@ -2,6 +2,7 @@ import {faBars, faX} from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {useEffect, useState} from 'react'
 import './header.css'
+import {Link} from 'react-router-dom'
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -32,19 +33,14 @@ const Header = () => {
         <nav className={`navbar-menu ${isOpen ? 'active' : ''}`}>
           <ul className="navbar-list">
             <li className="navbar-item">
-              <a href="#home" className="navbar-link" onClick={toggleMenu}>
+              <Link to="/" className="navbar-link" onClick={toggleMenu}>
                 Home
-              </a>
+              </Link>
             </li>
             <li className="navbar-item">
-              <a href="#about" className="navbar-link" onClick={toggleMenu}>
+              <Link to="/login" className="navbar-link" onClick={toggleMenu}>
                 Login
-              </a>
-            </li>
-            <li className="navbar-item">
-              <a href="#about" className="navbar-link" onClick={toggleMenu}>
-                About
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>

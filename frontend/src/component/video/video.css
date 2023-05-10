@@ -53,14 +53,15 @@ video {
   cursor: pointer;
   min-width: 75px;
   min-height: 45px;
+  transition: all 0.4s ease-in-out;
 }
 
 .like-active {
-  background-color: #ff0063;
+  background-color: #2ecc40;
 }
 
 .dislike-active {
-  background-color: #394350;
+  background-color: #ff4136;
 }
 
 @media (max-width: 820px) {
@@ -71,11 +72,13 @@ video {
   .container {
     flex-direction: column;
     padding: 0;
+    transition: all 0.4s ease-in-out;
   }
 
   .feedback {
     display: inline-flex;
     justify-content: space-evenly;
     flex-direction: row;
+    transition: all 0.4s ease-in-out;
   }
 }

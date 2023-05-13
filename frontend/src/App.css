@@ -1,4 +1,66 @@
+:root {
+  --background: #efefef;
+  --focus: #0096bfab;
+  --danger: #ff4136;
+  --success: #2ecc40;
+  --input-animation-duration: 0.1s;
+  --form-text: #333;
+}
+
 main {
   margin: 0 auto;
   padding: 1rem 1rem;
+}
+
+input {
+  transition: background-color 0.4s linear, border-color 0.4s linear,
+    color 0.4s linear, box-shadow 0.4s linear, transform 0.4s ease;
+  transition: background-color var(--input-animation-duration) linear,
+    border-color var(--input-animation-duration) linear,
+    color var(--input-animation-duration) linear,
+    box-shadow var(--input-animation-duration) linear,
+    transform var(--input-animation-duration) ease;
+}
+
+input {
+  background-color: var(--background);
+  font-family: inherit;
+  font-size: inherit;
+  margin-right: 6px;
+  margin-bottom: 6px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+  width: calc(100% - 20px);
+}
+
+button {
+  background-color: var(--background);
+  font-family: inherit;
+  font-size: inherit;
+  margin-right: 6px;
+  margin-bottom: 6px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+}
+
+input {
+  vertical-align: top;
+}
+
+label {
+  vertical-align: middle;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+
+input:focus {
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+select:focus {
+  box-shadow: 0 0 0 2px var(--focus);
 }

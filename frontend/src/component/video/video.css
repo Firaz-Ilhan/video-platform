@@ -61,7 +61,7 @@ video {
 }
 
 .dislike-active {
-  background-color: #ff4136;
+  background-color: var(--danger);
 }
 
 @media (max-width: 820px) {

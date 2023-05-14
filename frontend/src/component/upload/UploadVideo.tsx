@@ -7,10 +7,12 @@ const UploadVideo = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [uploadState, setUploadState] = useState('')
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       const file = e.target.files[0]
+      setUploadState('')
 
       if (file.type.startsWith('video/')) {
         setSelectedFile(file)
@@ -54,14 +56,24 @@ const UploadVideo = () => {
               (progressEvent.loaded * 100) / progressEvent.total
             )
             setProgress(percentCompleted)
+            setUploadState('Uploading...')
           }
         },
       }
 
       axios
         .put(presignedUrl, selectedFile, config)
-        .then((res) => console.log(res))
-        .catch((err) => console.error(err))
+        .then((res) => {
+          console.log(res)
+          setProgress(0)
+          setSelectedFile(null)
+          setUploadState('File uploaded successfully.')
+        })
+        .catch((err) => {
+          console.error(err)
+          setUploadState('')
+          setError('Failed to upload the file. Please try again.')
+        })
     }
   }
 
@@ -89,6 +101,7 @@ const UploadVideo = () => {
       <button onClick={uploadFile} disabled={!selectedFile || !!error}>
         Upload Video
       </button>
+      <p>{uploadState}</p>
     </div>
   )
 }

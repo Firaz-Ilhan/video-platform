@@ -25,7 +25,9 @@ const UploadVideo = () => {
   const getPresignedUrl = async (fileName: string) => {
     try {
       const response = await axios.get(
-        `http://localhost:1337/generate-presigned-url?fileName=${fileName}`
+        `http://localhost:1337/generate-presigned-url?fileName=${encodeURIComponent(
+          fileName
+        )}`
       )
       setPresignedUrl(response.data.url)
     } catch (error) {

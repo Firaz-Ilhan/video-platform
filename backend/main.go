@@ -16,11 +16,24 @@ import (
 )
 
 func main() {
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(os.Getenv("S3_REGION")),
+		Credentials: credentials.NewStaticCredentials(
+			os.Getenv("AWS_ACCESS_KEY_ID"),
+			os.Getenv("AWS_SECRET_ACCESS_KEY"),
+			""),
+	})
+
+	if err != nil {
+		log.Fatal("Failed to create AWS session: ", err)
+	}
+
+	s3Svc := s3.New(sess)
 
 	router := gin.Default()
 
@@ -31,25 +44,11 @@ func main() {
 			return
 		}
 
-		sess, err := session.NewSession(&aws.Config{
-			Region: aws.String(os.Getenv("S3_REGION")),
-			Credentials: credentials.NewStaticCredentials(
-				os.Getenv("AWS_ACCESS_KEY_ID"),
-				os.Getenv("AWS_SECRET_ACCESS_KEY"),
-				""),
-		})
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create AWS session"})
-			return
-		}
-
-		s3Svc := s3.New(sess)
-
 		req, _ := s3Svc.PutObjectRequest(&s3.PutObjectInput{
 			Bucket: aws.String(os.Getenv("S3_BUCKET")),
 			Key:    aws.String(fileName),
 		})
+
 		str, err := req.Presign(15 * time.Minute)
 
 		if err != nil {
@@ -71,7 +70,6 @@ func main() {
 
 	handler := c.Handler(router)
 
-	log.Fatal(http.ListenAndServe(":1337", handler))
-
-	router.Run(":1337")
+	const port = ":1337"
+	log.Fatal(http.ListenAndServe(port, handler))
 }

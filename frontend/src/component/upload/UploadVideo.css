@@ -6,8 +6,12 @@
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  max-width: 500px;
+  max-width: 600px;
   margin: auto;
+  background-color: #f9f9f9;
+  font-family: Arial, sans-serif;
+  color: #333;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 .input-group {
@@ -16,37 +20,123 @@
   margin-bottom: 20px;
 }
 
-.input-group input[type='file'] {
-  position: absolute;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
+.input-group input[type='file']:focus+label,
+.upload-button:focus {
+  outline: 2px solid #007bff;
+}
+
+.error-message {
+  color: var(--danger);
+  margin-top: 10px;
 }
 
 .upload-label {
-  display: inline-block;
-  padding: 10px 15px;
-  background-color: #eee;
-  border-radius: 4px;
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: left;
+  margin-top: 10px;
+}
+
+.upload-label:hover {
+  background-color: #ddd;
+}
+
+.progress-bar {
   width: 100%;
-  text-align: center;
+  margin-bottom: 20px;
 }
 
 .upload-button {
   padding: 10px 15px;
-  background-color: #007bff;
+  background-color: var(--success);
   color: #fff;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .upload-button:disabled {
-  background-color: #ccc;
   cursor: not-allowed;
+}
+
+.upload-button-container {
+  width: 100%;
+}
+
+
+.upload-button-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.drop-zone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.drop-zone.drag-over {
+  border-color: #2ecc40;
+  background-color: #e6f7e9;
+}
+
+.selected-file {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  background-color: #f8f8f8;
+  color: #333;
+  font-weight: bold;
+}
+
+.selected-file p {
+  margin: 0;
+}
+
+
+.progress-bar {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.progress-bar label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.progress-bar progress {
+  display: block;
+  width: 100%;
+  height: 20px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 10px;
+}
+
+.progress-bar progress::-webkit-progress-bar {
+  background-color: #ccc;
+}
+
+.progress-bar progress::-webkit-progress-value {
+  background-color: #2ecc40;
+  border-radius: 10px;
+}
+
+.progress-bar progress::-moz-progress-bar {
+  background-color: #2ecc40;
+  border-radius: 10px;
+}
+
+.progress-bar p {
+  margin-top: 10px;
 }

@@ -1,6 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import './UploadVideo.css'
-import axios, { AxiosProgressEvent, AxiosRequestConfig } from 'axios'
+import axios, {AxiosProgressEvent, AxiosRequestConfig} from 'axios'
+import {
+  faX,
+  faTriangleExclamation,
+  faSpinner,
+} from '@fortawesome/free-solid-svg-icons'
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 
 const UploadVideo = () => {
   const [progress, setProgress] = useState(0)
@@ -8,6 +14,7 @@ const UploadVideo = () => {
   const [presignedUrl, setPresignedUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [uploadState, setUploadState] = useState('')
+  const [uploading, setUploading] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -40,18 +47,24 @@ const UploadVideo = () => {
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.currentTarget.classList.add('drag-over');
-  };
+    e.preventDefault()
+    e.currentTarget.classList.add('drag-over')
+  }
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
-  };
+    e.preventDefault()
+    e.currentTarget.classList.remove('drag-over')
+  }
 
   const handleDropZoneClick = () => {
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null)
+    setProgress(0)
+    setUploadState('')
+  }
 
   const getPresignedUrl = async (fileName: string) => {
     try {
@@ -63,7 +76,7 @@ const UploadVideo = () => {
       setPresignedUrl(response.data.url)
     } catch (error) {
       console.error('Error while getting presigned URL', error)
-      setError('Failed to upload the file. Please try again.')
+      setError('Connection could not be established.')
     }
   }
 
@@ -79,12 +92,12 @@ const UploadVideo = () => {
         (progressEvent.loaded * 100) / progressEvent.total
       )
       setProgress(percentCompleted)
-      setUploadState('Uploading...')
     }
   }
 
   const uploadFile = () => {
     if (selectedFile && presignedUrl) {
+      setUploading(true)
       const config: AxiosRequestConfig = {
         headers: {
           'Content-Type': selectedFile.type,
@@ -99,12 +112,14 @@ const UploadVideo = () => {
           setProgress(0)
           setSelectedFile(null)
           setUploadState('File uploaded successfully.')
+          setUploading(false)
         })
         .catch((err) => {
           console.error(err)
           setProgress(0)
           setUploadState('')
           setError('Failed to upload the file. Please try again.')
+          setUploading(false)
         })
     }
   }
@@ -113,17 +128,16 @@ const UploadVideo = () => {
     <div className="upload-container">
       <div>
         <h1>Upload a Video</h1>
-        <p>Choose a video file and upload it.</p>
       </div>
+
       <div className="input-group">
         <div
           id="dropZone"
           className="drop-zone"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onClick={handleDropZoneClick}
-        >
+          onDrop={uploading ? undefined : handleDrop}
+          onDragOver={uploading ? undefined : handleDragOver}
+          onDragLeave={uploading ? undefined : handleDragLeave}
+          onClick={uploading ? undefined : handleDropZoneClick}>
           Drag and drop a video file here or click to select
           <input
             ref={fileInputRef}
@@ -133,16 +147,30 @@ const UploadVideo = () => {
             onChange={handleFileInput}
             aria-describedby="fileUploadError"
             hidden
+            disabled={uploading}
           />
         </div>
 
         <div className="selected-file">
-          {selectedFile ? <p>{selectedFile.name}</p> : <p>No file selected</p>}
+          {selectedFile ? (
+            <>
+              <span>{selectedFile.name}</span>
+              <button
+                title="unselect file"
+                aria-label="unselect file"
+                onClick={clearSelectedFile}
+                className="clear-button">
+                <FontAwesomeIcon icon={faX} />
+              </button>
+            </>
+          ) : (
+            <p>No file selected</p>
+          )}
         </div>
 
         {error && (
           <div id="fileUploadError" role="alert" className="error-message">
-            <span role="img" aria-label="error-icon">⚠️</span> {error}
+            <FontAwesomeIcon icon={faTriangleExclamation} /> {error}
           </div>
         )}
       </div>
@@ -154,8 +182,18 @@ const UploadVideo = () => {
         <p>{progress}% completed</p>
       </div>
       <div className="upload-button-container">
-        <button className="upload-button" onClick={uploadFile} disabled={!selectedFile || !!error}>
-          Upload Selected Video
+        <button
+          className="upload-button"
+          onClick={uploadFile}
+          disabled={!selectedFile || !!error || uploading}>
+          {uploading ? (
+            <span>
+              {' '}
+              <FontAwesomeIcon icon={faSpinner} spin /> Uploading Video...
+            </span>
+          ) : (
+            'Upload Selected Video'
+          )}
         </button>
         <p>{uploadState}</p>
       </div>
@@ -163,4 +201,4 @@ const UploadVideo = () => {
   )
 }
 
-export { UploadVideo }
+export {UploadVideo}

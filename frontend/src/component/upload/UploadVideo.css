@@ -20,7 +20,7 @@
   margin-bottom: 20px;
 }
 
-.input-group input[type='file']:focus+label,
+.input-group input[type='file']:focus + label,
 .upload-button:focus {
   outline: 2px solid #007bff;
 }
@@ -39,11 +39,6 @@
   background-color: #ddd;
 }
 
-.progress-bar {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
 .upload-button {
   padding: 10px 15px;
   background-color: var(--success);
@@ -58,11 +53,6 @@
 
 .upload-button-container {
   width: 100%;
-}
-
-
-.upload-button-container {
-  margin-top: 20px;
   text-align: center;
 }
 
@@ -85,7 +75,6 @@
 }
 
 .selected-file {
-  margin-top: 10px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -99,13 +88,12 @@
   margin: 0;
 }
 
-
 .progress-bar {
-  margin-top: 20px;
   padding: 10px;
   background-color: #f8f8f8;
   border-radius: 4px;
   text-align: center;
+  width: 100%;
 }
 
 .progress-bar label {
@@ -139,4 +127,13 @@
 
 .progress-bar p {
   margin-top: 10px;
+}
+
+.clear-button {
+  background-color: #f9f9f9;
+  color: var(--danger);
+  border: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0 0 0 5px;
 }

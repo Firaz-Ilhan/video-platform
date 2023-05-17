@@ -42,6 +42,11 @@ const Header = () => {
                 Login
               </Link>
             </li>
+            <li className="navbar-item">
+              <Link to="/video-upload" className="navbar-link" onClick={toggleMenu}>
+                Submit a Video
+              </Link>
+            </li>
           </ul>
         </nav>
 

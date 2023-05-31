@@ -1,6 +1,6 @@
 .header {
   position: relative;
-  background-color: #333;
+  background-color: #fff;
   height: 48px;
 }
 
@@ -14,7 +14,7 @@
 
 .navbar-brand h1 {
   font-size: 24px;
-  color: #fff;
+  color: #333;
   margin: 0;
 }
 
@@ -27,7 +27,7 @@
   display: block;
   height: 3px;
   width: 25px;
-  background-color: #fff;
+  background-color: #333;
   margin: 5px 0;
   border-radius: 3px;
   transition: all 0.4s ease-in-out;
@@ -53,14 +53,14 @@
 }
 
 .navbar-link {
-  color: #fff;
+  color: #333;
   text-decoration: none;
   font-size: 18px;
   transition: all 0.4s ease-in-out;
 }
 
 .navbar-link:hover {
-  color: #ccc;
+  color: var(--primary);
 }
 
 @media (max-width: 768px) {
@@ -70,7 +70,7 @@
     left: 0;
     right: 0;
     flex-direction: column;
-    background-color: #333;
+    background-color: #fff;
     height: 0;
     overflow: hidden;
     transition: all 0.4s ease-in-out;
@@ -84,14 +84,14 @@
     padding: 10px;
     z-index: 1;
     cursor: pointer;
-    color: #fff;
+    color: #333;
     font-size: 20px;
     background-color: transparent;
     border: none;
   }
 
   .navbar-toggle.active {
-    color: #fca311;
+    color: var(--primary);
   }
 
   .navbar-menu.active {
@@ -114,7 +114,7 @@
   }
 
   .navbar-link:hover {
-    color: #fca311;
+    color: var(--primary);
   }
 
   .navbar-list {

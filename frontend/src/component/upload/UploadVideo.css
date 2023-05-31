@@ -8,8 +8,7 @@
   border-radius: 4px;
   max-width: 600px;
   margin: auto;
-  background-color: #f9f9f9;
-  font-family: Arial, sans-serif;
+  background-color: var(--background);
   color: #333;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
@@ -22,7 +21,7 @@
 
 .input-group input[type='file']:focus + label,
 .upload-button:focus {
-  outline: 2px solid #007bff;
+  outline: 2px solid var(--info);
 }
 
 .error-message {
@@ -41,8 +40,9 @@
 
 .upload-button {
   padding: 10px 15px;
-  background-color: var(--success);
-  color: #fff;
+  margin: 0;
+  background-color: var(--primary);
+  color: var(--background);
   border: none;
   cursor: pointer;
 }
@@ -70,7 +70,7 @@
 }
 
 .drop-zone.drag-over {
-  border-color: #2ecc40;
+  border-color: var(--primary);
   background-color: #e6f7e9;
 }
 
@@ -106,22 +106,22 @@
   display: block;
   width: 100%;
   height: 20px;
-  background-color: #ccc;
+  background-color: #e7e7e7;
   border: none;
   border-radius: 10px;
 }
 
 .progress-bar progress::-webkit-progress-bar {
-  background-color: #ccc;
+  background-color: var(--info);
 }
 
 .progress-bar progress::-webkit-progress-value {
-  background-color: #2ecc40;
+  background-color: var(--info);
   border-radius: 10px;
 }
 
 .progress-bar progress::-moz-progress-bar {
-  background-color: #2ecc40;
+  background-color: var(--info);
   border-radius: 10px;
 }
 

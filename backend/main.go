@@ -33,10 +33,7 @@ var (
 )
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Failed to load .env file: %v", err)
-	}
+	_ = godotenv.Load()
 
 	config = Config{
 		S3Region:           os.Getenv("S3_REGION"),

@@ -5,6 +5,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  background: rgb(149,113,208);
+  background: linear-gradient(0deg, rgba(149,113,208,1) 20%, rgba(180,145,224,1) 28%); 
 }
 
 code {

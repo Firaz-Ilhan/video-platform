@@ -1,22 +1,29 @@
-import React, {useState, useEffect, useRef} from 'react'
-import './UploadVideo.css'
-import axios, {AxiosProgressEvent, AxiosRequestConfig} from 'axios'
 import {
-  faX,
-  faTriangleExclamation,
   faSpinner,
+  faTriangleExclamation,
+  faX,
 } from '@fortawesome/free-solid-svg-icons'
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Auth } from 'aws-amplify'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import './UploadVideo.css'
+import AWS from 'aws-sdk'
+
+AWS.config.update({
+  region: process.env.REACT_APP_AWS_REGION,
+})
 
 const UploadVideo = () => {
   const [progress, setProgress] = useState(0)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [presignedUrl, setPresignedUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [uploadState, setUploadState] = useState('')
   const [uploading, setUploading] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const navigate = useNavigate()
 
   const validateFile = (file: File) => {
     if (file.type.startsWith('video/')) {
@@ -25,7 +32,7 @@ const UploadVideo = () => {
       setUploadState('')
     } else {
       setSelectedFile(null)
-      setError('Please upload a video file.')
+      setError('Please upload a video file')
     }
   }
 
@@ -66,63 +73,56 @@ const UploadVideo = () => {
     setUploadState('')
   }
 
-  const getPresignedUrl = async (fileName: string) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:1337/generate-presigned-url?fileName=${encodeURIComponent(
-          fileName
-        )}`
-      )
-      setPresignedUrl(response.data.url)
-    } catch (error) {
-      console.error('Error while getting presigned URL', error)
-      setError('Connection could not be established.')
+  const uploadFile = async () => {
+    if (selectedFile) {
+      setUploading(true);
+      try {
+        const currentCredentials = await Auth.currentCredentials()
+  
+        AWS.config.update({
+          region: process.env.REACT_APP_AWS_REGION,
+          credentials: Auth.essentialCredentials(currentCredentials),
+        })
+  
+        const s3 = new AWS.S3()
+  
+        const params = {
+          Bucket: process.env.REACT_APP_AWS_S3_BUCKET || "",
+          Key: selectedFile.name,
+          Body: selectedFile,
+          ContentType: selectedFile.type,
+        }
+  
+        s3.upload(params, (err: any, data: any) => {
+          if (err) {
+            console.error('Error uploading file: ', err)
+            setError('Failed to upload the file')
+          } else {
+            setUploadState('File uploaded successfully')
+          }
+          setUploading(false);
+        }).on('httpUploadProgress', (evt) => {
+          setProgress(Math.round((evt.loaded / evt.total) * 100))
+        })
+      } catch (err) {
+        console.error('Error getting current credentials: ', err)
+        setUploading(false);
+      }
     }
-  }
+  }  
+
+  const checkUser = useCallback(async () => {
+    try {
+      AWS.config.credentials = await Auth.currentCredentials()
+    } catch (err) {
+      console.error(err)
+      navigate('/login')
+    }
+  }, [navigate])
 
   useEffect(() => {
-    if (selectedFile) {
-      getPresignedUrl(selectedFile.name)
-    }
-  }, [selectedFile])
-
-  const uploadProgress = (progressEvent: AxiosProgressEvent) => {
-    if (progressEvent.total) {
-      const percentCompleted = Math.round(
-        (progressEvent.loaded * 100) / progressEvent.total
-      )
-      setProgress(percentCompleted)
-    }
-  }
-
-  const uploadFile = () => {
-    if (selectedFile && presignedUrl) {
-      setUploading(true)
-      const config: AxiosRequestConfig = {
-        headers: {
-          'Content-Type': selectedFile.type,
-        },
-        onUploadProgress: uploadProgress,
-      }
-
-      axios
-        .put(presignedUrl, selectedFile, config)
-        .then((res) => {
-          console.log(res)
-          setProgress(0)
-          setSelectedFile(null)
-          setUploadState('File uploaded successfully.')
-          setUploading(false)
-        })
-        .catch((err) => {
-          console.error(err)
-          setProgress(0)
-          setUploadState('')
-          setError('Failed to upload the file. Please try again.')
-          setUploading(false)
-        })
-    }
-  }
+    checkUser()
+  }, [checkUser])
 
   return (
     <div className="upload-container">
@@ -201,4 +201,5 @@ const UploadVideo = () => {
   )
 }
 
-export {UploadVideo}
+export { UploadVideo }
+

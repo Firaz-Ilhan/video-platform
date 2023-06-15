@@ -65,7 +65,6 @@ func init() {
 func main() {
 	router := gin.Default()
 
-	router.GET("/generate-presigned-url", generatePresignedURL)
 	router.GET("/random-file", randomFile)
 
 	c := cors.New(cors.Options{
@@ -80,31 +79,6 @@ func main() {
 	port := fmt.Sprintf(":%s", config.Port)
 	log.Printf("Starting server on %s", port)
 	log.Fatal(http.ListenAndServe(port, handler))
-}
-
-func generatePresignedURL(c *gin.Context) {
-	fileName := c.Query("fileName")
-	if fileName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "fileName parameter is required"})
-		return
-	}
-
-	req, _ := s3Svc.PutObjectRequest(&s3.PutObjectInput{
-		Bucket: aws.String(config.S3Bucket),
-		Key:    aws.String(fileName),
-	})
-
-	str, err := req.Presign(15 * time.Minute)
-
-	if err != nil {
-		log.Printf("Failed to sign request: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sign request"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"url": str,
-	})
 }
 
 func randomFile(c *gin.Context) {

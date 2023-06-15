@@ -1,11 +1,13 @@
-import React, {useState} from 'react'
-import {Link} from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Auth } from 'aws-amplify'
 import './auth.css'
 
 const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({username: '', password: ''})
+  const navigate = useNavigate()
 
   const validateForm = () => {
     let formIsValid = true
@@ -25,11 +27,16 @@ const Login = () => {
     return formIsValid
   }
 
-  const handleSubmit = (event: { preventDefault: () => void }) => {
+  const handleSubmit = async (event: { preventDefault: () => void }) => {
     event.preventDefault()
 
     if (validateForm()) {
-      console.log({username, password})
+      try {
+        await Auth.signIn(username, password);
+        navigate('/')
+      } catch (error) {
+        console.error('authentication error', error)
+      }
     }
   }
 
@@ -72,4 +79,4 @@ const Login = () => {
   )
 }
 
-export {Login}
+export { Login }

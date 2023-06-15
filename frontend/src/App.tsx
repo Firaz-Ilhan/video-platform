@@ -5,6 +5,8 @@ import {Video} from './component/video/Video'
 import {Login} from './component/auth/Login'
 import {Register} from './component/auth/Register'
 import {UploadVideo} from './component/upload/UploadVideo'
+import { Confirmation } from './component/auth/Confirmation'
+import './AmplifyConfig';
 
 function App() {
   return (
@@ -16,6 +18,7 @@ function App() {
             <Route path="/" element={<Video />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/confirmation" element={<Confirmation />} />
             <Route path="/video-upload" element={<UploadVideo />} />
           </Routes>
         </main>

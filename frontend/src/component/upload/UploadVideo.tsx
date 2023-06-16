@@ -113,7 +113,7 @@ const UploadVideo = () => {
 
   const checkUser = useCallback(async () => {
     try {
-      AWS.config.credentials = await Auth.currentCredentials()
+      AWS.config.credentials = await Auth.currentAuthenticatedUser()
     } catch (err) {
       console.error(err)
       navigate('/login')

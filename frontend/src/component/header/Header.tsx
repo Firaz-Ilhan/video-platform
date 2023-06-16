@@ -1,3 +1,4 @@
+import {Auth, Hub} from 'aws-amplify'
 import {faBars, faX} from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {useEffect, useState} from 'react'
@@ -6,6 +7,13 @@ import {Link} from 'react-router-dom'
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    Auth.currentAuthenticatedUser()
+      .then((user) => setUser(user))
+      .catch(() => setUser(null))
+  }, [])
 
   const toggleMenu = () => {
     setIsOpen(!isOpen)
@@ -23,6 +31,29 @@ const Header = () => {
     }
   }, [isOpen])
 
+  useEffect(() => {
+    Auth.currentAuthenticatedUser()
+      .then((user) => setUser(user))
+      .catch(() => setUser(null))
+
+    const listener = Hub.listen('auth', ({payload: {event, data}}) => {
+      switch (event) {
+        case 'signIn':
+          setUser(data)
+          break
+        case 'signOut':
+          setUser(null)
+          break
+        default:
+          break
+      }
+    })
+
+    return () => {
+      Hub.listen('auth', listener)
+    }
+  }, [])
+
   return (
     <header className="header">
       <div className="header-container">
@@ -38,12 +69,18 @@ const Header = () => {
               </Link>
             </li>
             <li className="navbar-item">
-              <Link to="/login" className="navbar-link" onClick={toggleMenu}>
-                Login
+              <Link
+                to={user ? '/profile' : '/login'}
+                className="navbar-link"
+                onClick={toggleMenu}>
+                {user ? 'Profile' : 'Login'}
               </Link>
             </li>
             <li className="navbar-item">
-              <Link to="/video-upload" className="navbar-link" onClick={toggleMenu}>
+              <Link
+                to="/video-upload"
+                className="navbar-link"
+                onClick={toggleMenu}>
                 Submit a Video
               </Link>
             </li>

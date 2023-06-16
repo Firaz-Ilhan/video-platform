@@ -1,12 +1,13 @@
-import {BrowserRouter, Route, Routes} from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import './AmplifyConfig'
 import './App.css'
-import {Header} from './component/header/Header'
-import {Video} from './component/video/Video'
-import {Login} from './component/auth/Login'
-import {Register} from './component/auth/Register'
-import {UploadVideo} from './component/upload/UploadVideo'
 import { Confirmation } from './component/auth/Confirmation'
-import './AmplifyConfig';
+import { Login } from './component/auth/Login'
+import { Register } from './component/auth/Register'
+import { Header } from './component/header/Header'
+import { Profile } from './component/profile/Profile'
+import { UploadVideo } from './component/upload/UploadVideo'
+import { Video } from './component/video/Video'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/" element={<Video />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/confirmation" element={<Confirmation />} />
             <Route path="/video-upload" element={<UploadVideo />} />
           </Routes>

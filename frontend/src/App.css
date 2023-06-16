@@ -1,11 +1,11 @@
 :root {
   --background: #f9f9f9;
-  --primary: #6D46C3;
-  --primary-hover: #371E83;
-  --secondary: #2E7A11;
-  --secondary-hover: #1E620A;
-  --danger: #DB375F;
-  --info: #1982DB;
+  --primary: #6d46c3;
+  --primary-hover: #371e83;
+  --secondary: #2e7a11;
+  --secondary-hover: #1e620a;
+  --danger: #db375f;
+  --info: #1982db;
   --input-animation-duration: 0.1s;
   --form-text: #333;
 }
@@ -39,15 +39,17 @@ input {
 }
 
 button {
-  background-color: var(--background);
+  background-color: var(--primary);
+  color: var(--background);
   font-family: inherit;
   font-size: inherit;
   margin-right: 6px;
   margin-bottom: 6px;
   padding: 10px;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   outline: none;
+  cursor: pointer;
 }
 
 input {

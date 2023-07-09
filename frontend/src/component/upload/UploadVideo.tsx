@@ -3,10 +3,10 @@ import {
   faTriangleExclamation,
   faX,
 } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Auth } from 'aws-amplify'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {Auth} from 'aws-amplify'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
+import {useNavigate} from 'react-router-dom'
 import './UploadVideo.css'
 import AWS from 'aws-sdk'
 
@@ -75,24 +75,24 @@ const UploadVideo = () => {
 
   const uploadFile = async () => {
     if (selectedFile) {
-      setUploading(true);
+      setUploading(true)
       try {
         const currentCredentials = await Auth.currentCredentials()
-  
+
         AWS.config.update({
           region: process.env.REACT_APP_AWS_REGION,
           credentials: Auth.essentialCredentials(currentCredentials),
         })
-  
+
         const s3 = new AWS.S3()
-  
+
         const params = {
-          Bucket: process.env.REACT_APP_AWS_S3_BUCKET || "",
+          Bucket: process.env.REACT_APP_AWS_S3_BUCKET || '',
           Key: selectedFile.name,
           Body: selectedFile,
           ContentType: selectedFile.type,
         }
-  
+
         s3.upload(params, (err: any, data: any) => {
           if (err) {
             console.error('Error uploading file: ', err)
@@ -100,16 +100,16 @@ const UploadVideo = () => {
           } else {
             setUploadState('File uploaded successfully')
           }
-          setUploading(false);
+          setUploading(false)
         }).on('httpUploadProgress', (evt) => {
           setProgress(Math.round((evt.loaded / evt.total) * 100))
         })
       } catch (err) {
         console.error('Error getting current credentials: ', err)
-        setUploading(false);
+        setUploading(false)
       }
     }
-  }  
+  }
 
   const checkUser = useCallback(async () => {
     try {
@@ -145,6 +145,7 @@ const UploadVideo = () => {
             type="file"
             accept="video/*"
             onChange={handleFileInput}
+            aria-label="Upload a video"
             aria-describedby="fileUploadError"
             hidden
             disabled={uploading}
@@ -201,5 +202,4 @@ const UploadVideo = () => {
   )
 }
 
-export { UploadVideo }
-
+export {UploadVideo}

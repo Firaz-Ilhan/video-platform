@@ -25,7 +25,7 @@ const Confirmation = () => {
   return (
     <div className="authForm">
       <h2 id="authHeader">Confirm Registration</h2>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
         <div className="formControl">
           <label htmlFor="username">Username:</label>
           <input 

@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { Auth } from 'aws-amplify'
-import { useNavigate } from 'react-router-dom'
-import { Confirmation } from './Confirmation'
+import React from 'react'
+import {render, fireEvent, waitFor, screen} from '@testing-library/react'
+import {Auth} from 'aws-amplify'
+import {useNavigate} from 'react-router-dom'
+import {Confirmation} from './Confirmation'
 
 jest.mock('aws-amplify')
 jest.mock('react-router-dom', () => ({
@@ -40,12 +40,12 @@ describe('Confirmation', () => {
     const usernameInput = screen.getByLabelText('Username:')
     const confirmationCodeInput = screen.getByLabelText('Confirmation Code:')
 
-    userEvent.type(usernameInput, 'user')
-    userEvent.type(confirmationCodeInput, '123')
-    userEvent.click(screen.getByRole('button', {name: 'Confirm Registration'}))
+    fireEvent.change(usernameInput, {target: {value: 'user'}})
+    fireEvent.change(confirmationCodeInput, {target: {value: 'code'}})
+    fireEvent.click(screen.getByRole('button', {name: 'Confirm Registration'}))
 
     await waitFor(() => {
-      expect(Auth.confirmSignUp).toHaveBeenCalledWith('user', '123')
+      expect(Auth.confirmSignUp).toHaveBeenCalledWith('user', 'code')
     })
     await waitFor(() => {
       expect(navigateMock).toHaveBeenCalled()

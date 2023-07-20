@@ -1,7 +1,6 @@
 import boto3
 import os
 
-
 def get_environment_variable(var_name):
     try:
         return os.getenv(var_name)

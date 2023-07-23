@@ -6,6 +6,7 @@ variable "access_key" {}
 variable "secret_key" {}
 variable "first_bucket_name" {}
 variable "second_bucket_name" {}
+variable "user_arn" {}
 
 provider "aws" {
   region     = var.aws_region
@@ -21,6 +22,50 @@ resource "aws_s3_bucket" "first_bucket" {
 resource "aws_s3_bucket" "second_bucket" {
   bucket = var.second_bucket_name
   acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "first_bucket_policy" {
+  bucket = aws_s3_bucket.first_bucket.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "Policy1683915863869",
+  "Statement": [
+    {
+      "Sid": "Stmt1683915859261",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${var.user_arn}"
+      },
+      "Action": "s3:*",
+      "Resource": "arn:aws:s3:::${var.first_bucket_name}/*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_s3_bucket_policy" "second_bucket_policy" {
+  bucket = aws_s3_bucket.second_bucket.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "Policy1683915863869",
+  "Statement": [
+    {
+      "Sid": "Stmt1683915859261",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${var.user_arn}"
+      },
+      "Action": "s3:*",
+      "Resource": "arn:aws:s3:::${var.second_bucket_name}/*"
+    }
+  ]
+}
+POLICY
 }
 
 data "archive_file" "lambda_zip" {

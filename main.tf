@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "5.9.0"
+    }
+  }
+}
+
 variable "aws_region" {
   default = "eu-central-1"
 }
@@ -134,4 +143,8 @@ resource "aws_lambda_permission" "allow_bucket" {
   function_name = aws_lambda_function.media_conversion_lambda.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.first_bucket.arn
+}
+
+resource "aws_media_convert_queue" "mediaconvert_queue" {
+  name = "queue"
 }

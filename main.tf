@@ -1,21 +1,40 @@
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "5.9.0"
     }
   }
 }
 
 variable "aws_region" {
+  type    = string
   default = "eu-central-1"
 }
 
-variable "access_key" {}
-variable "secret_key" {}
-variable "first_bucket_name" {}
-variable "second_bucket_name" {}
-variable "user_arn" {}
+variable "access_key" {
+  description = "AWS Access Key"
+  type        = string
+  sensitive   = true
+}
+
+variable "secret_key" {
+  description = "AWS Secret Key"
+  type        = string
+  sensitive   = true
+}
+
+variable "first_bucket_name" {
+  type = string
+}
+
+variable "second_bucket_name" {
+  type = string
+}
+
+variable "user_arn" {
+  type = string
+}
 
 provider "aws" {
   region     = var.aws_region

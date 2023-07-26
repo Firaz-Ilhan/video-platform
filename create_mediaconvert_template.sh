@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # enter the S3 bucket name
-s3_bucket="s3://name/"
+s3_bucket="${S3_BUCKET}"
 
 payload='
 {
@@ -75,7 +75,7 @@ payload='
   "HopDestinations": []
 }'
 
-payload=$(echo "${payload}" | sed "s|s3_bucket_placeholder|${s3_bucket}|g")
+payload=$(echo "${payload}" | sed "s|s3_bucket_placeholder|${S3_BUCKET}|g")
 
 echo "${payload}" >template.json
 

@@ -119,6 +119,16 @@ resource "aws_lambda_function" "media_conversion_lambda" {
       S3_OUTPUT          = var.second_bucket_name
     }
   }
+
+  // aws mediaconvert isn't supported by terraform yet
+  // needs aws cli installed and configured
+  provisioner "local-exec" {
+    // Alternatively, the script can be run in the aws cloud shell
+    command = "bash ${path.module}/create_mediaconvert_template.sh" 
+    environment = {
+      S3_BUCKET = "s3://${aws_s3_bucket.second_bucket.bucket}/"
+    }
+  }
 }
 
 resource "aws_iam_role" "lambda_exec" {

@@ -96,6 +96,65 @@ resource "aws_s3_bucket_policy" "second_bucket_policy" {
 POLICY
 }
 
+resource "aws_iam_role" "mediaconvert_role" {
+  name = "mediaconvert_role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "mediaconvert.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "mediaconvert_role_policy" {
+  name = "mediaconvert_role_policy"
+  role = aws_iam_role.mediaconvert_role.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.first_bucket.arn}",
+        "${aws_s3_bucket.first_bucket.arn}/*",
+        "${aws_s3_bucket.second_bucket.arn}",
+        "${aws_s3_bucket.second_bucket.arn}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "mediaconvert:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_media_convert_queue" "mediaconvert_queue" {
+  name = "queue"
+}
+
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_file = "${path.module}/serverless/media_conversion_lambda.py"
@@ -113,8 +172,8 @@ resource "aws_lambda_function" "media_conversion_lambda" {
   environment {
     variables = {
       JOB_TEMPLATE       = "mediaconvert-template"
-      MEDIACONVERT_QUEUE = "arn:aws:mediaconvert:eu-west-1:777468512599:queues/Default"
-      MEDIACONVERT_ROLE  = "arn:aws:iam::777468512599:role/mediaconvert-role"
+      MEDIACONVERT_QUEUE = aws_media_convert_queue.mediaconvert_queue.arn
+      MEDIACONVERT_ROLE  = aws_iam_role.mediaconvert_role.arn
       REGION_NAME        = var.aws_region
       S3_OUTPUT          = var.second_bucket_name
     }
@@ -124,7 +183,7 @@ resource "aws_lambda_function" "media_conversion_lambda" {
   // needs aws cli installed and configured
   provisioner "local-exec" {
     // Alternatively, the script can be run in the aws cloud shell
-    command = "bash ${path.module}/create_mediaconvert_template.sh" 
+    command = "bash ${path.module}/create_mediaconvert_template.sh"
     environment = {
       S3_BUCKET = "s3://${aws_s3_bucket.second_bucket.bucket}/"
     }
@@ -172,8 +231,4 @@ resource "aws_lambda_permission" "allow_bucket" {
   function_name = aws_lambda_function.media_conversion_lambda.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.first_bucket.arn
-}
-
-resource "aws_media_convert_queue" "mediaconvert_queue" {
-  name = "queue"
 }

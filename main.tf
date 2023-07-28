@@ -42,10 +42,9 @@ provider "aws" {
   secret_key = var.secret_key
 }
 
-
 resource "aws_iam_role" "role" {
   name = "my_role"
-  
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -85,6 +84,26 @@ resource "aws_iam_role_policy" "policy" {
 EOF
 }
 
+resource "aws_iam_policy" "cognito_create_userpool_policy" {
+  name        = "cognito_create_userpool_policy"
+  description = "Policy to allow cognito-idp:CreateUserPool"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:CreateUserPool"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_s3_bucket" "first_bucket" {
   bucket = var.first_bucket_name
   acl    = "private"
@@ -107,7 +126,7 @@ resource "aws_s3_bucket_policy" "first_bucket_policy" {
       "Sid": "Stmt1683915859261",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${var.user_arn}"
+          "Service": "lambda.amazonaws.com"
       },
       "Action": "s3:*",
       "Resource": "arn:aws:s3:::${var.first_bucket_name}/*"
@@ -129,7 +148,7 @@ resource "aws_s3_bucket_policy" "second_bucket_policy" {
       "Sid": "Stmt1683915859261",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${var.user_arn}"
+          "Service": "lambda.amazonaws.com"
       },
       "Action": "s3:*",
       "Resource": "arn:aws:s3:::${var.second_bucket_name}/*"

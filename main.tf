@@ -42,6 +42,49 @@ provider "aws" {
   secret_key = var.secret_key
 }
 
+
+resource "aws_iam_role" "role" {
+  name = "my_role"
+  
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${var.user_arn}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "policy" {
+  name = "my_policy"
+  role = aws_iam_role.role.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": ["arn:aws:s3:::*"]
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_s3_bucket" "first_bucket" {
   bucket = var.first_bucket_name
   acl    = "private"

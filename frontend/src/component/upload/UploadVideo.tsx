@@ -20,6 +20,7 @@ const UploadVideo = () => {
   const [error, setError] = useState<string | null>(null)
   const [uploadState, setUploadState] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [videoTitle, setVideoTitle] = useState<string>('')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -74,7 +75,7 @@ const UploadVideo = () => {
   }
 
   const uploadFile = async () => {
-    if (selectedFile) {
+    if (selectedFile && videoTitle.trim() !== '') {
       setUploading(true)
       try {
         const currentCredentials = await Auth.currentCredentials()
@@ -91,6 +92,9 @@ const UploadVideo = () => {
           Key: selectedFile.name,
           Body: selectedFile,
           ContentType: selectedFile.type,
+          Metadata: {
+            'video-title': videoTitle,
+          },
         }
 
         s3.upload(params, (err: any, data: any) => {
@@ -131,6 +135,18 @@ const UploadVideo = () => {
       </div>
 
       <div className="input-group">
+        <div className="video-title-input-group">
+          <label htmlFor="videoTitle">Video Title:</label>
+          <input
+            type="text"
+            id="videoTitle"
+            className="video-title-input"
+            value={videoTitle}
+            onChange={(e) => setVideoTitle(e.target.value)}
+            placeholder="Enter video title"
+          />
+        </div>
+
         <div
           id="dropZone"
           className="drop-zone"
@@ -186,7 +202,9 @@ const UploadVideo = () => {
         <button
           className="upload-button"
           onClick={uploadFile}
-          disabled={!selectedFile || !!error || uploading}>
+          disabled={
+            !selectedFile || !!error || uploading || videoTitle.trim() === ''
+          }>
           {uploading ? (
             <span>
               {' '}

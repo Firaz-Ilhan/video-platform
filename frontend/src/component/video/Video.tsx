@@ -1,17 +1,29 @@
 import {
-  faThumbsUp,
-  faThumbsDown,
   faArrowCircleRight,
+  faThumbsDown,
+  faThumbsUp,
 } from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {useState} from 'react'
+import {useAxios} from '../../hooks/useAxios'
 import './video.css'
+
+const fetchUrl = 'http://localhost:1337/random-file'
 
 const Video = () => {
   const [likeCount, setLikeCount] = useState(0)
   const [dislikeCount, setDislikeCount] = useState(0)
 
   const [activeBtn, setActiveBtn] = useState('none')
+
+  const {response, loading, fetchData} = useAxios({
+    url: fetchUrl,
+    method: 'GET',
+  })
+
+  const url = response ? response.data.url : null
+
+  console.log(url)
 
   const [animationState, setAnimationState] = useState({
     likeAnimate: true,
@@ -64,20 +76,25 @@ const Video = () => {
     }
   }
 
+  const handleNextVideoClick = () => {
+    fetchData({url: fetchUrl, method: 'GET'})
+  }
+
   return (
     <div className="container">
-      <div className="card box">
-        <h2>video titel</h2>
-        <video controls>
-          <source
-            src={
-              'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4'
-            }
-            type="video/mp4"
-          />
-          Your browser does not support the video tag.
-        </video>
-      </div>
+      {loading ? (
+        <div className="loading-skeleton card box"></div>
+      ) : (
+        <div className="card box">
+          <h2>video title</h2>
+          {url && (
+            <video controls key={url}>
+              <source src={url} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          )}
+        </div>
+      )}
 
       <div className="feedback">
         <button
@@ -107,7 +124,8 @@ const Video = () => {
         <button
           title="Show me the next video"
           className="btn"
-          aria-label="Next Video">
+          aria-label="Next Video"
+          onClick={handleNextVideoClick}>
           <FontAwesomeIcon icon={faArrowCircleRight} />
         </button>
       </div>

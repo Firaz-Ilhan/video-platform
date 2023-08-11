@@ -42,68 +42,6 @@ provider "aws" {
   secret_key = var.secret_key
 }
 
-resource "aws_iam_role" "role" {
-  name = "my_role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${var.user_arn}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "policy" {
-  name = "my_policy"
-  role = aws_iam_role.role.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListBucket",
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject"
-      ],
-      "Resource": ["arn:aws:s3:::*"]
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "cognito_create_userpool_policy" {
-  name        = "cognito_create_userpool_policy"
-  description = "Policy to allow cognito-idp:CreateUserPool"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "cognito-idp:CreateUserPool"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_s3_bucket" "first_bucket" {
   bucket = var.first_bucket_name
   acl    = "private"
@@ -294,3 +232,132 @@ resource "aws_lambda_permission" "allow_bucket" {
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.first_bucket.arn
 }
+
+resource "aws_iam_role" "authenticated" {
+  name               = "cognito_authenticated"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Principal": {
+        "Federated": "cognito-identity.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "unauthenticated" {
+  name               = "cognito_unauthenticated"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Principal": {
+        "Federated": "cognito-identity.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+
+resource "aws_iam_role_policy_attachment" "cognito_authenticated" {
+  role       = aws_iam_role.authenticated.name
+  policy_arn = aws_iam_policy.cognito_create_userpool_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_unauthenticated" {
+  role       = aws_iam_role.unauthenticated.name
+  policy_arn = aws_iam_policy.cognito_create_userpool_policy.arn
+}
+
+
+resource "aws_iam_policy" "cognito_create_userpool_policy" {
+  name        = "cognito_create_userpool_policy"
+  description = "Policy to allow cognito-idp:CreateUserPool"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:CreateUserPool"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+variable "identity_pool_name" {
+  description = "The name of the Cognito Identity Pool"
+  type        = string
+  default     = "MyIdentityPool"
+}
+
+variable "allow_unauthenticated_identities" {
+  description = "Whether to allow unauthenticated identities or not"
+  type        = bool
+  default     = false
+}
+
+variable "developer_provider_name" {
+  description = "The developer provider name"
+  type        = string
+  default     = "dev"
+}
+
+resource "aws_cognito_identity_pool" "main" {
+  identity_pool_name               = var.identity_pool_name
+  allow_unauthenticated_identities = var.allow_unauthenticated_identities
+
+  cognito_identity_providers {
+    client_id     = aws_cognito_user_pool_client.main.id
+    provider_name = aws_cognito_user_pool.main.endpoint
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_cognito_user_pool" "main" {
+  name = "my_user_pool"
+
+}
+
+resource "aws_cognito_user_pool_client" "main" {
+  name = "my_user_pool_client"
+
+
+  user_pool_id = aws_cognito_user_pool.main.id
+
+  explicit_auth_flows = [
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH"
+  ]
+}
+
+resource "aws_cognito_identity_pool_roles_attachment" "main" {
+  identity_pool_id = aws_cognito_identity_pool.main.id
+
+  roles = {
+    "authenticated"   = aws_iam_role.authenticated.arn
+    "unauthenticated" = aws_iam_role.unauthenticated.arn
+  }
+}
+

@@ -75,7 +75,7 @@ const UploadVideo = () => {
   }
 
   const uploadFile = async () => {
-    if (selectedFile) {
+    if (selectedFile && videoTitle.trim() !== '') {
       setUploading(true)
       try {
         const currentCredentials = await Auth.currentCredentials()
@@ -92,6 +92,9 @@ const UploadVideo = () => {
           Key: selectedFile.name,
           Body: selectedFile,
           ContentType: selectedFile.type,
+          Metadata: {
+            'video-title': videoTitle,
+          },
         }
 
         s3.upload(params, (err: any, data: any) => {
@@ -200,7 +203,7 @@ const UploadVideo = () => {
           className="upload-button"
           onClick={uploadFile}
           disabled={
-            !selectedFile || !!error || uploading || videoTitle.trim() !== ''
+            !selectedFile || !!error || uploading || videoTitle.trim() === ''
           }>
           {uploading ? (
             <span>

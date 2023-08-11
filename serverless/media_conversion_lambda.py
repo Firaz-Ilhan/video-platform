@@ -1,3 +1,4 @@
+import uuid
 import boto3
 import os
 
@@ -47,6 +48,27 @@ def create_job(mediaconvert, role, job_template, queue, s3_output, bucket, key):
     )
     return response
 
+def store_in_dynamodb(bucket: str, key: str, title: str):
+    """Store video metadata and URL in DynamoDB"""
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('VideoMetadata')
+    video_url = f"https://s3.amazonaws.com/{bucket}{key}"
+
+    unique_id = str(uuid.uuid4())
+    
+    table.put_item(
+        Item={
+            'videoKey': unique_id,
+            'title': title,
+            'url': video_url
+        }
+    )
+
+def get_s3_metadata(bucket: str, key: str) -> dict:
+    """Retrieve metadata for an object from S3"""
+    s3 = boto3.client('s3')
+    response = s3.head_object(Bucket=bucket, Key=key)
+    return response.get('Metadata', {})
 
 def lambda_handler(event, context):
     try:
@@ -68,6 +90,13 @@ def lambda_handler(event, context):
             bucket,
             key,
         )
+
+        metadata = get_s3_metadata(bucket, key)
+        
+        video_title = metadata.get('video-title', 'Unknown Title')
+        
+        output_bucket = s3_output.split('://')[-1]
+        store_in_dynamodb(output_bucket, key, video_title)
 
         print(response)
     except Exception as e:

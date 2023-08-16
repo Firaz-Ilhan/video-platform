@@ -4,11 +4,10 @@ import {
   faThumbsUp,
 } from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {useState} from 'react'
-import {useAxios} from '../../hooks/useAxios'
+import {API, Auth} from 'aws-amplify'
+import {useEffect, useState} from 'react'
 import './video.css'
-
-const fetchUrl = 'http://localhost:1337/random-file'
+import {Storage} from 'aws-amplify'
 
 const Video = () => {
   const [likeCount, setLikeCount] = useState(0)
@@ -16,14 +15,21 @@ const Video = () => {
 
   const [activeBtn, setActiveBtn] = useState('none')
 
-  const {response, loading, fetchData} = useAxios({
-    url: fetchUrl,
-    method: 'GET',
-  })
+  const [title, setTitle] = useState('')
+  const [url, setUrl] = useState('')
 
-  const url = response ? response.data.url : null
-
-  console.log(url)
+  async function callLambdaFunction() {
+    try {
+      const response = await API.get('fetchRandomVideo', '/', {})
+      console.log(response)
+      const {title, url} = response.body
+      setTitle(title)
+      console.log(url)
+      setUrl(url)
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const [animationState, setAnimationState] = useState({
     likeAnimate: true,
@@ -77,8 +83,27 @@ const Video = () => {
   }
 
   const handleNextVideoClick = () => {
-    fetchData({url: fetchUrl, method: 'GET'})
+    callLambdaFunction()
   }
+
+  const loading = false
+
+  async function checkUserAuthentication() {
+    try {
+      const session = await Auth.currentSession()
+      if (session && session.isValid()) {
+        console.log('User is authenticated')
+      } else {
+        console.log('User is not authenticated')
+      }
+    } catch (error) {
+      console.log('Error getting user session:', error)
+    }
+  }
+
+  useEffect(() => {
+    checkUserAuthentication()
+  }, [])
 
   return (
     <div className="container">
@@ -86,7 +111,7 @@ const Video = () => {
         <div className="loading-skeleton card box"></div>
       ) : (
         <div className="card box">
-          <h2>video title</h2>
+          <h2>{title}</h2>
           {url && (
             <video controls key={url}>
               <source src={url} type="video/mp4" />
@@ -127,6 +152,9 @@ const Video = () => {
           aria-label="Next Video"
           onClick={handleNextVideoClick}>
           <FontAwesomeIcon icon={faArrowCircleRight} />
+        </button>
+        <button title="call lambda function test" onClick={callLambdaFunction}>
+          Call Lambda
         </button>
       </div>
     </div>

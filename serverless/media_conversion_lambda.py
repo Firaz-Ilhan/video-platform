@@ -1,4 +1,3 @@
-import uuid
 import boto3
 import os
 
@@ -48,17 +47,26 @@ def create_job(mediaconvert, role, job_template, queue, s3_output, bucket, key):
     )
     return response
 
+def get_next_video_id(table):
+    response = table.update_item(
+        Key={'videoKey': -1},
+        UpdateExpression="ADD videoCount :increment",
+        ExpressionAttributeValues={':increment': 1},
+        ReturnValues="UPDATED_NEW"
+    )
+    return int(response['Attributes']['videoCount'])
+
 def store_in_dynamodb(bucket: str, key: str, title: str):
     """Store video metadata and URL in DynamoDB"""
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('VideoMetadata')
-    video_url = f"https://s3.amazonaws.com/{bucket}{key}"
+    video_url = f"https://{bucket}.s3.eu-west-1.amazonaws.com/{key}"
 
-    unique_id = str(uuid.uuid4())
-    
+    video_id = get_next_video_id(table)
+    print(type(video_id))
     table.put_item(
         Item={
-            'videoKey': unique_id,
+            'videoKey': video_id,
             'title': title,
             'url': video_url
         }

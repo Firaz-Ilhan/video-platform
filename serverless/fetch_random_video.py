@@ -2,22 +2,13 @@ import os
 import boto3
 import random
 
-dynamodb = boto3.resource('dynamodb')
-table_name = os.getenv('dynamodb_table_name')
-table = dynamodb.Table(table_name)
-
-
-def get_total_video_count():
-    response = table.get_item(Key={'videoKey': -1})
-    return response['Item']['videoCount']
-
-def get_random_video(random_key):
-    response = table.get_item(Key={'videoKey': random_key})
-    return response['Item']
-
 def lambda_handler(event, context):
+    dynamodb = boto3.resource('dynamodb')
+    table_name = os.getenv('dynamodb_table_name')
+    table = dynamodb.Table(table_name)
+
     try:
-        total_videos = get_total_video_count()
+        total_videos = get_total_video_count(table)
         
         if total_videos == 0:
             return {
@@ -27,7 +18,7 @@ def lambda_handler(event, context):
 
         random_key = random.randint(1, total_videos)
         
-        random_video = get_random_video(random_key)
+        random_video = get_random_video(table, random_key)
         
         return {
             'statusCode': 200,
@@ -45,3 +36,11 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': f"Error occurred: {e}"
         }
+
+def get_total_video_count(table):
+    response = table.get_item(Key={'videoKey': -1})
+    return response['Item']['videoCount']
+
+def get_random_video(table, random_key):
+    response = table.get_item(Key={'videoKey': random_key})
+    return response['Item']

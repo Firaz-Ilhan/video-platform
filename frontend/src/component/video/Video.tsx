@@ -150,11 +150,8 @@ const Video = () => {
           title="Show me the next video"
           className="btn"
           aria-label="Next Video"
-          onClick={handleNextVideoClick}>
+          onClick={callLambdaFunction}>
           <FontAwesomeIcon icon={faArrowCircleRight} />
-        </button>
-        <button title="call lambda function test" onClick={callLambdaFunction}>
-          Call Lambda
         </button>
       </div>
     </div>

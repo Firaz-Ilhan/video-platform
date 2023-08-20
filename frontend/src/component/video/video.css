@@ -4,45 +4,44 @@ video {
 }
 
 .card {
-  border-width: 1px;
+  border: 1px solid;
   border-radius: 1rem;
-  padding: 1rem;
+  padding: 1em;
 }
 
 .container {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  padding: 0 3em;
+  padding: 0 4em;
+}
+
+.box,
+.feedback {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: var(--background);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .box {
-  flex-basis: 0;
-  flex-grow: 1;
-  padding: 20px;
-  border-radius: 8px;
-  background-color: var(--background);
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  border: 1px solid #ccc;
+  flex: 1 0;
+  aspect-ratio: 16/9;
 }
 
 .feedback {
-  background-color: var(--background);
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  border-radius: 8px;
   min-width: 200px;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
-  border: 1px solid #ccc;
 }
 
 .btn {
   border: none;
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,7 +50,6 @@ video {
   border-radius: 4px;
   padding: 6px 15px;
   margin: 0 10px;
-  font-size: 1.5rem;
   cursor: pointer;
   min-width: 75px;
   min-height: 45px;
@@ -61,47 +59,37 @@ video {
 .like-active {
   background-color: var(--secondary);
 }
-
 .dislike-active {
   background-color: var(--danger);
 }
 
 @media (max-width: 820px) {
-  video {
-    width: 100%;
-  }
-
   .container {
     flex-direction: column;
     padding: 0;
-    transition: all 0.4s ease-in-out;
   }
-
   .feedback {
-    display: inline-flex;
-    justify-content: space-evenly;
     flex-direction: row;
-    transition: all 0.4s ease-in-out;
+    justify-content: space-evenly;
+  }
+  .loading-skeleton {
+    padding-bottom: 56.25%;
   }
 }
 
 .loading-skeleton {
-  padding-bottom: 56.25%;
   position: relative;
   overflow: hidden;
   border-radius: 10px;
-  background-image: linear-gradient(
-    90deg,
-    #f0f0f0 25%,
-    #f8f8f8 50%,
-    #f0f0f0 75%
-  );
+  aspect-ratio: 16/9;
+  background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: loading-skeleton-animation 1s infinite linear;
 }
 
 @keyframes loading-skeleton-animation {
-  0% {
+  0%,
+  100% {
     background-position: 200% 0;
   }
   100% {

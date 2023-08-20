@@ -5,7 +5,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {API, Auth} from 'aws-amplify'
-import {SetStateAction, useEffect, useState} from 'react'
+import {useEffect, useState} from 'react'
 import './video.css'
 
 const Video = () => {
@@ -15,48 +15,40 @@ const Video = () => {
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [videoId, setVideoId] = useState<number>()
+  const [loading, setLoading] = useState(false)
+  const [animationState, setAnimationState] = useState({
+    likeAnimate: true,
+    dislikeAnimate: true,
+  })
 
   async function callLambdaFunction() {
+    setLoading(true)
     try {
       const userSub = await getUserSub()
-      console.log(userSub, 'userSub')
       const response = await API.get('fetchRandomVideo', '/', {
         queryStringParameters: {
           userId: userSub,
         },
       })
-
-      console.log(response, 'response')
-
       const {title, url, videoKey, likes, dislikes} = response.body.videoInfo
-
       setTitle(title)
       setVideoId(videoKey)
       setUrl(url)
       setLikeCount(likes)
       setDislikeCount(dislikes)
-
-      if (response.body.userVote) {
-        setActiveBtn(response.body.userVote)
-      } else {
-        setActiveBtn('none')
-      }
+      setActiveBtn(response.body.userVote || 'none')
     } catch (error) {
       console.log(error)
+    } finally {
+      setLoading(false)
     }
   }
-
-  const [animationState, setAnimationState] = useState({
-    likeAnimate: true,
-    dislikeAnimate: true,
-  })
 
   const handleAnimation = (key: string) => {
     setAnimationState((prevState) => ({
       ...prevState,
       [key]: false,
     }))
-
     setTimeout(() => {
       setAnimationState((prevState) => ({
         ...prevState,
@@ -65,18 +57,16 @@ const Video = () => {
     }, 1000)
   }
 
-  const sendVote = async (action: string) => {
+  const handleVote = async (action: string) => {
     const userSub = await getUserSub()
-
     try {
-      const response = await API.post('fetchRandomVideo', '/', {
+      await API.post('fetchRandomVideo', '/', {
         body: {
           videoKey: videoId,
-          action: action,
+          action,
           userId: userSub,
         },
       })
-      console.log(response)
     } catch (error) {
       console.log('Error updating vote:', error)
     }
@@ -84,43 +74,46 @@ const Video = () => {
 
   const handleLikeClick = async () => {
     handleAnimation('likeAnimate')
-
     if (activeBtn === 'none') {
-      setLikeCount((prevCount) => prevCount + 1)
+      setLikeCount((prev) => prev + 1)
       setActiveBtn('like')
-      sendVote('like')
+      await handleVote('like')
     } else if (activeBtn === 'like') {
-      setLikeCount((prevCount) => prevCount - 1)
+      setLikeCount((prev) => prev - 1)
       setActiveBtn('none')
-      sendVote('remove')
+      await handleVote('remove')
     } else if (activeBtn === 'dislike') {
-      setLikeCount((prevCount) => prevCount + 1)
-      setDislikeCount((prevCount) => prevCount - 1)
+      setLikeCount((prev) => prev + 1)
+      setDislikeCount((prev) => prev - 1)
       setActiveBtn('like')
-      sendVote('like')
+      await handleVote('remove')
+      await handleVote('like')
     }
   }
 
   const handleDislikeClick = async () => {
     handleAnimation('dislikeAnimate')
-
     if (activeBtn === 'none') {
-      setDislikeCount((prevCount) => prevCount + 1)
+      setDislikeCount((prev) => prev + 1)
       setActiveBtn('dislike')
-      sendVote('dislike')
+      await handleVote('dislike')
     } else if (activeBtn === 'dislike') {
-      setDislikeCount((prevCount) => prevCount - 1)
+      setDislikeCount((prev) => prev - 1)
       setActiveBtn('none')
-      sendVote('remove')
+      await handleVote('remove')
     } else if (activeBtn === 'like') {
-      setDislikeCount((prevCount) => prevCount + 1)
-      setLikeCount((prevCount) => prevCount - 1)
+      setDislikeCount((prev) => prev + 1)
+      setLikeCount((prev) => prev - 1)
       setActiveBtn('dislike')
-      sendVote('dislike')
+      await handleVote('remove')
+      await handleVote('dislike')
     }
   }
 
-  const loading = false
+  useEffect(() => {
+    checkUserAuthentication()
+    callLambdaFunction()
+  }, [])
 
   async function checkUserAuthentication() {
     try {
@@ -138,17 +131,12 @@ const Video = () => {
   async function getUserSub() {
     try {
       const userInfo = await Auth.currentAuthenticatedUser()
-      console.log(userInfo, 'user info')
       return userInfo.attributes.sub
     } catch (error) {
       console.log('Error fetching user information:', error)
       return null
     }
   }
-
-  useEffect(() => {
-    checkUserAuthentication()
-  }, [])
 
   return (
     <div className="container">
@@ -165,7 +153,6 @@ const Video = () => {
           )}
         </div>
       )}
-
       <div className="feedback">
         <button
           title="I like this video"
@@ -178,7 +165,6 @@ const Video = () => {
           />
           {likeCount}
         </button>
-
         <button
           title="I dislike this video"
           className={`btn ${activeBtn === 'dislike' ? 'dislike-active' : ''}`}
@@ -190,7 +176,6 @@ const Video = () => {
           />
           {dislikeCount}
         </button>
-
         <button
           title="Show me the next video"
           className="btn"

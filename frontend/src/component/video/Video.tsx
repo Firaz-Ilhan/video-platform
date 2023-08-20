@@ -5,27 +5,42 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {API, Auth} from 'aws-amplify'
-import {useEffect, useState} from 'react'
+import {SetStateAction, useEffect, useState} from 'react'
 import './video.css'
-import {Storage} from 'aws-amplify'
 
 const Video = () => {
   const [likeCount, setLikeCount] = useState(0)
   const [dislikeCount, setDislikeCount] = useState(0)
-
   const [activeBtn, setActiveBtn] = useState('none')
-
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
+  const [videoId, setVideoId] = useState<number>()
 
   async function callLambdaFunction() {
     try {
-      const response = await API.get('fetchRandomVideo', '/', {})
-      console.log(response)
-      const {title, url} = response.body
+      const userSub = await getUserSub()
+      console.log(userSub, 'userSub')
+      const response = await API.get('fetchRandomVideo', '/', {
+        queryStringParameters: {
+          userId: userSub,
+        },
+      })
+
+      console.log(response, 'response')
+
+      const {title, url, videoKey, likes, dislikes} = response.body.videoInfo
+
       setTitle(title)
-      console.log(url)
+      setVideoId(videoKey)
       setUrl(url)
+      setLikeCount(likes)
+      setDislikeCount(dislikes)
+
+      if (response.body.userVote) {
+        setActiveBtn(response.body.userVote)
+      } else {
+        setActiveBtn('none')
+      }
     } catch (error) {
       console.log(error)
     }
@@ -50,40 +65,59 @@ const Video = () => {
     }, 1000)
   }
 
-  const handleLikeClick = () => {
+  const sendVote = async (action: string) => {
+    const userSub = await getUserSub()
+
+    try {
+      const response = await API.post('fetchRandomVideo', '/', {
+        body: {
+          videoKey: videoId,
+          action: action,
+          userId: userSub,
+        },
+      })
+      console.log(response)
+    } catch (error) {
+      console.log('Error updating vote:', error)
+    }
+  }
+
+  const handleLikeClick = async () => {
     handleAnimation('likeAnimate')
 
     if (activeBtn === 'none') {
       setLikeCount((prevCount) => prevCount + 1)
       setActiveBtn('like')
+      sendVote('like')
     } else if (activeBtn === 'like') {
       setLikeCount((prevCount) => prevCount - 1)
       setActiveBtn('none')
+      sendVote('remove')
     } else if (activeBtn === 'dislike') {
       setLikeCount((prevCount) => prevCount + 1)
       setDislikeCount((prevCount) => prevCount - 1)
       setActiveBtn('like')
+      sendVote('like')
     }
   }
 
-  const handleDislikeClick = () => {
+  const handleDislikeClick = async () => {
     handleAnimation('dislikeAnimate')
 
     if (activeBtn === 'none') {
       setDislikeCount((prevCount) => prevCount + 1)
       setActiveBtn('dislike')
+      sendVote('dislike')
     } else if (activeBtn === 'dislike') {
       setDislikeCount((prevCount) => prevCount - 1)
       setActiveBtn('none')
+      sendVote('remove')
     } else if (activeBtn === 'like') {
       setDislikeCount((prevCount) => prevCount + 1)
       setLikeCount((prevCount) => prevCount - 1)
       setActiveBtn('dislike')
+      sendVote('dislike')
     }
-  }
-
-  const handleNextVideoClick = () => {
-    callLambdaFunction()
   }
 
   const loading = false
@@ -98,6 +132,17 @@ const Video = () => {
       }
     } catch (error) {
       console.log('Error getting user session:', error)
+    }
+  }
+
+  async function getUserSub() {
+    try {
+      const userInfo = await Auth.currentAuthenticatedUser()
+      console.log(userInfo, 'user info')
+      return userInfo.attributes.sub
+    } catch (error) {
+      console.log('Error fetching user information:', error)
+      return null
     }
   }
 

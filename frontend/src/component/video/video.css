@@ -1,33 +1,27 @@
 video {
   width: 100%;
-  height: auto;
-}
-
-.card {
-  border: 1px solid;
-  border-radius: 1rem;
-  padding: 1em;
 }
 
 .container {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  padding: 0 4em;
+  padding: 0em 6em;
+  margin: 0 2em;
+  background-color: var(--background);
 }
 
 .box,
 .feedback {
-  border: 1px solid #ccc;
-  border-radius: 8px;
   background-color: var(--background);
+  border: 2px dashed black;
+  border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
 }
 
 .box {
   flex: 1 0;
-  aspect-ratio: 16/9;
 }
 
 .feedback {
@@ -39,42 +33,38 @@ video {
 }
 
 .btn {
-  border: none;
-  color: #fff;
   font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background-color: #bdc0c5;
+  background-color: white;
+  border: 2px solid var(--primary);
   border-radius: 4px;
+  color: var(--primary);
   padding: 6px 15px;
   margin: 0 10px;
   cursor: pointer;
   min-width: 75px;
+  width: 50px;
   min-height: 45px;
-  transition: all 0.4s ease-in-out;
+  transition: all 0.08s ease-out;
+}
+
+.btn:hover {
+  transform: scale(1.05);
 }
 
 .like-active {
+  color: white;
+  border-color: var(--secondary);
   background-color: var(--secondary);
 }
-.dislike-active {
-  background-color: var(--danger);
-}
 
-@media (max-width: 820px) {
-  .container {
-    flex-direction: column;
-    padding: 0;
-  }
-  .feedback {
-    flex-direction: row;
-    justify-content: space-evenly;
-  }
-  .loading-skeleton {
-    padding-bottom: 56.25%;
-  }
+.dislike-active {
+  color: white;
+  border-color: var(--danger);
+  background-color: var(--danger);
 }
 
 .loading-skeleton {
@@ -85,6 +75,30 @@ video {
   background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: loading-skeleton-animation 1s infinite linear;
+}
+
+.title-placeholder {
+  height: 24px;
+  background-color: #f0f0f0;
+  margin-bottom: 50px;
+}
+
+@media (max-width: 820px) {
+  .container {
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+  }
+  .feedback {
+    flex-direction: row;
+    justify-content: space-evenly;
+  }
+
+  .title-placeholder {
+    height: 16px;
+    background-color: #f0f0f0;
+    margin: 28px;
+  }
 }
 
 @keyframes loading-skeleton-animation {

@@ -131,7 +131,7 @@ const UploadVideo = () => {
   return (
     <div className="upload-container">
       <div>
-        <h1>Upload a Video</h1>
+        <h2>Upload a Video</h2>
       </div>
 
       <div className="input-group">

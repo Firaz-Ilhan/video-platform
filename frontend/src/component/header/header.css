@@ -1,6 +1,5 @@
 .header {
   position: relative;
-  background-color: #fff;
   height: 48px;
 }
 
@@ -68,7 +67,7 @@
     left: 0;
     right: 0;
     flex-direction: column;
-    background-color: #fff;
+    background-color: var(--background);
     height: 0;
     overflow: hidden;
     transition: all 0.4s ease-in-out;

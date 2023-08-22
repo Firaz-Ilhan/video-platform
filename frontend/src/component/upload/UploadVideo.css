@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  border: 1px solid #ccc;
+  border: 2px dashed black;
   border-radius: 4px;
   max-width: 600px;
   margin: auto;
@@ -79,7 +79,9 @@
   margin-bottom: 20px;
   padding: 20px;
   cursor: pointer;
-  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  transition:
+    border-color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out;
 }
 
 .drop-zone.drag-over {
@@ -151,4 +153,28 @@
   cursor: pointer;
   margin: 0;
   padding: 0 0 0 5px;
+}
+
+.video-title-input-group label,
+.progress-bar label,
+.upload-label {
+  font-weight: 500;
+}
+
+.upload-button,
+.clear-button {
+  font-weight: 500;
+}
+
+.error-message {
+  font-weight: 600;
+}
+
+.selected-file {
+  font-weight: 400;
+}
+
+.selected-file p,
+.progress-bar p {
+  font-weight: 400;
 }

@@ -1,5 +1,5 @@
 :root {
-  --background: #f9f9f9;
+  --background: #f9fafb;
   --primary: #6d46c3;
   --primary-hover: #371e83;
   --secondary: #2e7a11;
@@ -8,6 +8,10 @@
   --info: #1982db;
   --input-animation-duration: 0.1s;
   --form-text: #333;
+} 
+
+html{
+  background-color: var(--background);
 }
 
 main {
@@ -68,4 +72,13 @@ input:focus {
 
 select:focus {
   box-shadow: 0 0 0 2px var(--primary);
+}
+
+h2 {
+  font-weight: 600;
+}
+
+label {
+  font-weight: 500;
+
 }

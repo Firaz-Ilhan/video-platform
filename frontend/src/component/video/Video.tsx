@@ -71,24 +71,32 @@ const Video = () => {
   return (
     <div className="container">
       {loading ? (
-        <div className="loading-skeleton card box"></div>
+        <div className=" box">
+          <div className="title-placeholder"></div>{' '}
+          <div className="loading-skeleton"></div>{' '}
+          
+        </div>
       ) : (
-        <div className="card box">
-          <h2>{title}</h2>
+        <div className="box">
+          <div className="title">
+            <h2>{title}</h2>
+          </div>
           {url && (
-            <video controls key={url}>
-              <source src={url} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            <div className="video-wrapper">
+              <video controls key={url}>
+                <source src={url} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
           )}
         </div>
       )}
       <div className="feedback">
         <button
-          title="I like this video"
+          title="Click to like this video"
           className={`btn ${activeBtn === 'like' ? 'like-active' : ''}`}
           onClick={handleLikeClick}
-          aria-label="Like">
+          aria-label={`Like video. Current count: ${likeCount}`}>
           <FontAwesomeIcon
             icon={faThumbsUp}
             bounce={!animationState.likeAnimate}
@@ -96,10 +104,10 @@ const Video = () => {
           {likeCount}
         </button>
         <button
-          title="I dislike this video"
+          title="Click to dislike this video"
           className={`btn ${activeBtn === 'dislike' ? 'dislike-active' : ''}`}
           onClick={handleDislikeClick}
-          aria-label="Dislike">
+          aria-label={`Dislike video. Current count: ${dislikeCount}`}>
           <FontAwesomeIcon
             icon={faThumbsDown}
             bounce={!animationState.dislikeAnimate}
@@ -107,11 +115,10 @@ const Video = () => {
           {dislikeCount}
         </button>
         <button
-          title="Show me the next video"
+          title="Click to load the next video"
           className="btn"
-          aria-label="Next Video"
-          onClick={refetch} 
-        >
+          aria-label="Load the next video"
+          onClick={refetch}>
           <FontAwesomeIcon icon={faArrowCircleRight} />
         </button>
       </div>

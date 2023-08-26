@@ -9,6 +9,8 @@ import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import './UploadVideo.css'
 import AWS from 'aws-sdk'
+import {useFileValidation} from './useFileValidation'
+import {useDragAndDrop} from './useDragAndDrop'
 
 AWS.config.update({
   region: process.env.REACT_APP_AWS_REGION,
@@ -16,52 +18,24 @@ AWS.config.update({
 
 const UploadVideo = () => {
   const [progress, setProgress] = useState(0)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [uploadState, setUploadState] = useState('')
   const [uploading, setUploading] = useState(false)
   const [videoTitle, setVideoTitle] = useState<string>('')
+
+  const {selectedFile, error, validateFile, setSelectedFile, setError} =
+    useFileValidation()
+
+  const {dragOver, handleDrop, handleDragOver, handleDragLeave} =
+    useDragAndDrop(validateFile)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const navigate = useNavigate()
 
-  const validateFile = (file: File) => {
-    if (file.type.startsWith('video/')) {
-      setSelectedFile(file)
-      setError(null)
-      setUploadState('')
-    } else {
-      setSelectedFile(null)
-      setError('Please upload a video file')
-    }
-  }
-
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       validateFile(e.target.files[0])
     }
-  }
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    if (e.dataTransfer.items) {
-      const file = e.dataTransfer.items[0].getAsFile()
-      if (file) {
-        validateFile(file)
-      }
-    }
-    e.currentTarget.classList.remove('drag-over')
-  }
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.currentTarget.classList.add('drag-over')
-  }
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.currentTarget.classList.remove('drag-over')
   }
 
   const handleDropZoneClick = () => {
@@ -149,7 +123,7 @@ const UploadVideo = () => {
 
         <div
           id="dropZone"
-          className="drop-zone"
+          className={`drop-zone ${dragOver ? 'drag-over' : ''}`}
           onDrop={uploading ? undefined : handleDrop}
           onDragOver={uploading ? undefined : handleDragOver}
           onDragLeave={uploading ? undefined : handleDragLeave}

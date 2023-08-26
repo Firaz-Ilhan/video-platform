@@ -58,7 +58,7 @@ const Header = () => {
     <header className="header">
       <div className="header-container">
         <div className={`navbar-brand ${isOpen ? 'hidden' : ''}`}>
-          <h1>Video Platform</h1>
+          <h1>RandTube</h1>
         </div>
 
         <nav className={`navbar-menu ${isOpen ? 'active' : ''}`}>
@@ -88,6 +88,7 @@ const Header = () => {
         </nav>
 
         <button
+          type="button"
           className="navbar-toggle"
           aria-expanded={isOpen}
           aria-label={isOpen ? 'Close Menu' : 'Open Menu'}

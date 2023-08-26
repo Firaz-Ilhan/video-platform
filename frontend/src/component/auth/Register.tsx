@@ -1,37 +1,45 @@
-import React from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { Auth } from 'aws-amplify';
-import './auth.css';
+import {Auth} from 'aws-amplify'
+import {useState} from 'react'
+import {SubmitHandler, useForm} from 'react-hook-form'
+import {Link, useNavigate} from 'react-router-dom'
+import {LoadingButton} from './LoadingButton'
+import './auth.css'
 
 type FormValues = {
-  username: string;
-  email: string;
-  password: string;
-};
+  username: string
+  email: string
+  password: string
+}
 
 const Register = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
-  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: {errors},
+  } = useForm<FormValues>()
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    const { username, email, password } = data;
+    setIsLoading(true)
+    const {username, email, password} = data
 
     try {
-      const { user } = await Auth.signUp({
+      const {user} = await Auth.signUp({
         username,
         password,
         attributes: {
           email,
         },
-      });
-      console.log(user);
-      navigate('/confirmation');
+      })
+      console.log(user)
+      navigate('/confirmation')
     } catch (error) {
-      console.error('error signing up:', error);
+      console.error('error signing up:', error)
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="authForm">
@@ -47,10 +55,11 @@ const Register = () => {
               minLength: 3,
               maxLength: 20,
             })}
+            aria-describedby="usernameError"
             autoFocus
           />
           {errors.username && (
-            <div className="error" role="alert">
+            <div className="error" role="alert" id="usernameError">
               Username must be between 3 and 20 characters.
             </div>
           )}
@@ -64,9 +73,10 @@ const Register = () => {
               required: true,
               pattern: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
             })}
+            aria-describedby="emailError"
           />
           {errors.email && (
-            <div className="error" role="alert">
+            <div className="error" role="alert" id="emailError">
               Please enter a valid email address.
             </div>
           )}
@@ -77,18 +87,21 @@ const Register = () => {
             type="password"
             id="password"
             {...register('password', {required: true, minLength: 8})}
+            aria-describedby="passwordError"
           />
           {errors.password && (
-            <div className="error" role="alert">
+            <div className="error" role="alert" id="passwordError">
               Password must be at least 8 characters long.
             </div>
           )}
         </div>
-        <input type="submit" value="Register" />
+        <LoadingButton type="submit" isLoading={isLoading}>
+          Register
+        </LoadingButton>
       </form>
 
       <div className="loginRegisterLink">
-        Already have an account? <Link to="/login">Login</Link>
+        Already have an account? <Link to="/login">Log in here</Link>
       </div>
     </div>
   )

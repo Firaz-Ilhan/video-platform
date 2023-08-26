@@ -72,15 +72,11 @@ const Video = () => {
     <div className="container">
       {loading ? (
         <div className=" box">
-          <div className="title-placeholder"></div>{' '}
           <div className="loading-skeleton"></div>{' '}
-          
+          <div className="title-placeholder"></div>{' '}
         </div>
       ) : (
         <div className="box">
-          <div className="title">
-            <h2>{title}</h2>
-          </div>
           {url && (
             <div className="video-wrapper">
               <video controls key={url}>
@@ -89,6 +85,10 @@ const Video = () => {
               </video>
             </div>
           )}
+
+          <div className="title">
+            <h2>{title}</h2>
+          </div>
         </div>
       )}
       <div className="feedback">

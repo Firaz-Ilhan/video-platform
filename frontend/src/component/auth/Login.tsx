@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Auth } from 'aws-amplify'
+import {useState} from 'react'
+import {Link, useNavigate} from 'react-router-dom'
+import {LoadingButton} from './LoadingButton'
 import './auth.css'
+import {useAuth} from './useAuth'
 
 const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({username: '', password: ''})
   const navigate = useNavigate()
+  const {isLoading, signIn} = useAuth()
 
   const validateForm = () => {
     let formIsValid = true
@@ -27,17 +29,15 @@ const Login = () => {
     return formIsValid
   }
 
-  const handleSubmit = async (event: { preventDefault: () => void }) => {
+  const handleSubmit = async (event: {preventDefault: () => void}) => {
     event.preventDefault()
 
-    if (validateForm()) {
-      try {
-        await Auth.signIn(username, password);
-        navigate('/')
-      } catch (error) {
-        console.error('authentication error', error)
-      }
+    if (!validateForm()) {
+      return
     }
+
+    const {success} = await signIn(username, password)
+    if (success) navigate('/')
   }
 
   return (
@@ -51,9 +51,10 @@ const Login = () => {
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            aria-describedby="usernameError"
             autoFocus
           />
-          <div className="error" role="alert">
+          <div className="error" role="alert" id="usernameError">
             {errors.username}
           </div>
         </div>
@@ -64,19 +65,22 @@ const Login = () => {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            aria-describedby="passwordError"
           />
-          <div className="error" role="alert">
+          <div className="error" role="alert" id="passwordError">
             {errors.password}
           </div>
         </div>
-        <input type="submit" value="Submit" />
+        <LoadingButton type="submit" isLoading={isLoading}>
+          Login
+        </LoadingButton>
       </form>
 
       <div className="loginRegisterLink">
-        Don't have an account? <Link to="/register">Register</Link>
+        Need an account? <Link to="/register">Sign up now</Link>
       </div>
     </div>
   )
 }
 
-export { Login }
+export {Login}

@@ -1,5 +1,6 @@
 video {
   width: 100%;
+  aspect-ratio: 16/9;
 }
 
 .container {
@@ -17,7 +18,7 @@ video {
   border: 2px dashed black;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  padding: 10px;
 }
 
 .box {
@@ -48,11 +49,14 @@ video {
   min-width: 75px;
   width: 50px;
   min-height: 45px;
-  transition: all 0.08s ease-out;
+  transition: all 0.3s ease-out;
 }
 
-.btn:hover {
+.btn:hover,
+.btn:focus {
   transform: scale(1.05);
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .like-active {
@@ -74,13 +78,19 @@ video {
   aspect-ratio: 16/9;
   background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  animation: loading-skeleton-animation 1s infinite linear;
+  animation: loading-skeleton-animation 1.5s infinite linear;
+  padding: 10px;
 }
 
 .title-placeholder {
-  height: 24px;
+  height: 20px;
   background-color: #f0f0f0;
-  margin-bottom: 50px;
+  margin: 0.5em 0 0 0;
+}
+
+h2 {
+  margin: 0.5em 0 0 0;
+  font-size: 20px;
 }
 
 @media (max-width: 820px) {
@@ -89,15 +99,20 @@ video {
     padding: 0;
     margin: 0;
   }
+
   .feedback {
     flex-direction: row;
     justify-content: space-evenly;
   }
 
   .title-placeholder {
-    height: 16px;
+    height: 19px;
     background-color: #f0f0f0;
-    margin: 28px;
+    margin: 0.5em 0 0 0;
+  }
+
+  h2 {
+    font-size: 19px;
   }
 }
 
@@ -106,7 +121,7 @@ video {
   100% {
     background-position: 200% 0;
   }
-  100% {
+  50% {
     background-position: -200% 0;
   }
 }

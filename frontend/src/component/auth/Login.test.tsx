@@ -1,7 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { Auth } from 'aws-amplify'
-import { BrowserRouter } from 'react-router-dom'
-import { Login } from './Login'
+import {fireEvent, render, screen, waitFor} from '@testing-library/react'
+import {Auth} from 'aws-amplify'
+import {BrowserRouter} from 'react-router-dom'
+import {Login} from './Login'
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -21,7 +21,10 @@ describe('<Login />', () => {
         <Login />
       </BrowserRouter>
     )
-    expect(screen.getByText(/Login/i)).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {level: 2, name: /Login/i})
+    ).toBeInTheDocument()
   })
 
   test('can enter username', () => {
@@ -53,7 +56,7 @@ describe('<Login />', () => {
       </BrowserRouter>
     )
 
-    fireEvent.click(screen.getByText('Submit'))
+    fireEvent.click(screen.getByRole('button', {name: /Login/i}))
 
     await waitFor(() => {
       expect(
@@ -75,7 +78,7 @@ describe('<Login />', () => {
     fireEvent.change(screen.getByLabelText('Password:'), {
       target: {value: 'testpass'},
     })
-    fireEvent.click(screen.getByText('Submit'))
+    fireEvent.click(screen.getByRole('button', {name: /Login/i}))
 
     await waitFor(() => {
       expect(Auth.signIn).toHaveBeenCalledWith('testuser', 'testpass')

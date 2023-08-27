@@ -1,18 +1,19 @@
-import React from 'react'
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {
   faArrowCircleRight,
   faThumbsDown,
   faThumbsUp,
 } from '@fortawesome/free-solid-svg-icons'
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {useAuthCheck} from '../../hooks/useAuthCheck'
+import {useAnimation} from './useAnimation'
 import {useUserSub} from './useUserSub'
 import {useVideoData} from './useVideoData'
-import {useAnimation} from './useAnimation'
-import {handleVote} from './voteUtils'
 import './video.css'
+import {handleVote} from './voteUtils'
 
 const Video = () => {
   const {userSub} = useUserSub()
+  useAuthCheck()
 
   const {
     likeCount,

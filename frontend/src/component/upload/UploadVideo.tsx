@@ -1,3 +1,6 @@
+import {S3Client} from '@aws-sdk/client-s3'
+import {Upload} from '@aws-sdk/lib-storage'
+import {XhrHttpHandler} from '@aws-sdk/xhr-http-handler'
 import {
   faSpinner,
   faTriangleExclamation,
@@ -5,16 +8,13 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {Auth} from 'aws-amplify'
-import React, {useCallback, useEffect, useRef, useState} from 'react'
-import {useNavigate} from 'react-router-dom'
+import React, {useRef, useState} from 'react'
+import {useAuthCheck} from '../../hooks/useAuthCheck'
 import './UploadVideo.css'
-import AWS from 'aws-sdk'
-import {useFileValidation} from './useFileValidation'
 import {useDragAndDrop} from './useDragAndDrop'
+import {useFileValidation} from './useFileValidation'
 
-AWS.config.update({
-  region: process.env.REACT_APP_AWS_REGION,
-})
+const xhrHandler = new XhrHttpHandler({})
 
 const UploadVideo = () => {
   const [progress, setProgress] = useState(0)
@@ -30,7 +30,7 @@ const UploadVideo = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const navigate = useNavigate()
+  useAuthCheck()
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
@@ -54,53 +54,42 @@ const UploadVideo = () => {
       try {
         const currentCredentials = await Auth.currentCredentials()
 
-        AWS.config.update({
+        const s3Client = new S3Client({
           region: process.env.REACT_APP_AWS_REGION,
           credentials: Auth.essentialCredentials(currentCredentials),
+          requestHandler: xhrHandler,
         })
 
-        const s3 = new AWS.S3()
-
-        const params = {
-          Bucket: process.env.REACT_APP_AWS_S3_BUCKET || '',
-          Key: selectedFile.name,
-          Body: selectedFile,
-          ContentType: selectedFile.type,
-          Metadata: {
-            'video-title': videoTitle,
+        const upload = new Upload({
+          client: s3Client,
+          params: {
+            Bucket: process.env.REACT_APP_AWS_S3_BUCKET || '',
+            Key: selectedFile.name,
+            Body: selectedFile,
+            ContentType: selectedFile.type,
+            Metadata: {
+              'video-title': videoTitle,
+            },
           },
-        }
-
-        s3.upload(params, (err: any, data: any) => {
-          if (err) {
-            console.error('Error uploading file: ', err)
-            setError('Failed to upload the file')
-          } else {
-            setUploadState('File uploaded successfully')
-          }
-          setUploading(false)
-        }).on('httpUploadProgress', (evt) => {
-          setProgress(Math.round((evt.loaded / evt.total) * 100))
         })
+
+        upload.on('httpUploadProgress', (progress) => {
+          if (progress.loaded && progress.total) {
+            setProgress(Math.round((progress.loaded / progress.total) * 100))
+          }
+        })
+
+        await upload.done()
+
+        setUploadState('File uploaded successfully')
+        setUploading(false)
       } catch (err) {
-        console.error('Error getting current credentials: ', err)
+        console.error('Error uploading file: ', err)
+        setError('Failed to upload the file')
         setUploading(false)
       }
     }
   }
-
-  const checkUser = useCallback(async () => {
-    try {
-      AWS.config.credentials = await Auth.currentAuthenticatedUser()
-    } catch (err) {
-      console.error(err)
-      navigate('/login')
-    }
-  }, [navigate])
-
-  useEffect(() => {
-    checkUser()
-  }, [checkUser])
 
   return (
     <div className="upload-container">

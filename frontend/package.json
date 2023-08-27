@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.400.0",
+    "@aws-sdk/lib-storage": "^3.400.0",
+    "@aws-sdk/xhr-http-handler": "^3.398.0",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
@@ -14,7 +17,6 @@
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "aws-amplify": "^5.3.10",
-    "aws-sdk": "^2.1445.0",
     "axios": "^1.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

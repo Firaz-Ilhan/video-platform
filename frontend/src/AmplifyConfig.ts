@@ -12,6 +12,10 @@ Amplify.configure({
       bucket: process.env.REACT_APP_AWS_S3_BUCKET,
       region: process.env.REACT_APP_AWS_REGION,
     },
+    anotherBucket: {
+      bucket: process.env.REACT_APP_AWS_VIDEO_S3_BUCKET,
+      region: process.env.REACT_APP_AWS_REGION,
+    }
   },
   API: {
     endpoints: [

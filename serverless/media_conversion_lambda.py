@@ -61,8 +61,6 @@ def store_in_dynamodb(bucket: str, key: str, title: str):
     """Store video metadata and URL in DynamoDB"""
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('test')
-    bucket_name = bucket.replace("s3://", "").rstrip("/")
-    video_url = f"https://{bucket_name}.s3.eu-west-1.amazonaws.com/{key}"
 
     video_id = get_next_video_id(table)
     print(type(video_id))
@@ -70,7 +68,7 @@ def store_in_dynamodb(bucket: str, key: str, title: str):
         Item={
             'videoKey': video_id,
             'title': title,
-            'url': video_url,
+            'url': key,
             'likes': 0,
             'dislikes': 0,
         }

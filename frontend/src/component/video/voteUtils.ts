@@ -8,7 +8,7 @@ export async function handleVote(
   if (!userSub) {
     throw new Error('User sub not available')
   }
-  await API.post('fetchRandomVideo', '/', {
+  await API.post('video', '/', {
     body: {
       videoKey: videoId,
       action,

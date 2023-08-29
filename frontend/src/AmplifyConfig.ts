@@ -20,8 +20,8 @@ Amplify.configure({
   API: {
     endpoints: [
       {
-        name: 'fetchRandomVideo',
-        endpoint: 'https://61cy373eyf.execute-api.eu-west-1.amazonaws.com/prod',
+        name: 'video',
+        endpoint: process.env.REACT_APP_AWS_API_GATEWAY,
       },
     ],
   },

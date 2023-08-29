@@ -18,7 +18,7 @@ function useVideoData(userSub: string | null) {
       return
     }
     try {
-      const response = await API.get('fetchRandomVideo', '/', {
+      const response = await API.get('video', '/', {
         queryStringParameters: {
           userId: userSub,
         },

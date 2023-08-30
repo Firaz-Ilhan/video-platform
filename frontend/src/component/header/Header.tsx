@@ -1,35 +1,15 @@
-import {Auth, Hub} from 'aws-amplify'
 import {faBars, faX} from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {Auth, Hub} from 'aws-amplify'
 import {useEffect, useState} from 'react'
-import './header.css'
 import {Link} from 'react-router-dom'
+import './header.css'
+import {useMenuToggle} from './useMenuToggle'
 
 const Header = () => {
-  const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState(null)
 
-  useEffect(() => {
-    Auth.currentAuthenticatedUser()
-      .then((user) => setUser(user))
-      .catch(() => setUser(null))
-  }, [])
-
-  const toggleMenu = () => {
-    setIsOpen(!isOpen)
-  }
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 768 && isOpen) {
-        setIsOpen(false)
-      }
-    }
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [isOpen])
+  const {isOpen, toggleMenu} = useMenuToggle()
 
   useEffect(() => {
     Auth.currentAuthenticatedUser()
@@ -49,9 +29,7 @@ const Header = () => {
       }
     })
 
-    return () => {
-      Hub.listen('auth', listener)
-    }
+    return () => listener()
   }, [])
 
   return (

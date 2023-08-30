@@ -133,11 +133,13 @@
 .progress-bar progress::-webkit-progress-value {
   background-color: var(--primary);
   border-radius: 10px;
+  transition: width 0.2s linear;
 }
 
 .progress-bar progress::-moz-progress-bar {
   background-color: var(--primary);
   border-radius: 10px;
+  transition: width 0.2s linear;
 }
 
 .progress-bar p {

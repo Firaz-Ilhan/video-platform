@@ -1,20 +1,16 @@
-import {S3Client} from '@aws-sdk/client-s3'
-import {Upload} from '@aws-sdk/lib-storage'
-import {XhrHttpHandler} from '@aws-sdk/xhr-http-handler'
 import {
   faSpinner,
   faTriangleExclamation,
   faX,
 } from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {Auth} from 'aws-amplify'
 import React, {useRef, useState} from 'react'
 import {useAuthCheck} from '../../hooks/useAuthCheck'
 import './UploadVideo.css'
+import {uploadToS3} from './uploadService'
 import {useDragAndDrop} from './useDragAndDrop'
 import {useFileValidation} from './useFileValidation'
 
-const xhrHandler = new XhrHttpHandler({})
 
 const UploadVideo = () => {
   const [progress, setProgress] = useState(0)
@@ -52,40 +48,12 @@ const UploadVideo = () => {
     if (selectedFile && videoTitle.trim() !== '') {
       setUploading(true)
       try {
-        const currentCredentials = await Auth.currentCredentials()
-
-        const s3Client = new S3Client({
-          region: process.env.REACT_APP_AWS_REGION,
-          credentials: Auth.essentialCredentials(currentCredentials),
-          requestHandler: xhrHandler,
-        })
-
-        const upload = new Upload({
-          client: s3Client,
-          params: {
-            Bucket: process.env.REACT_APP_AWS_S3_BUCKET || '',
-            Key: selectedFile.name,
-            Body: selectedFile,
-            ContentType: selectedFile.type,
-            Metadata: {
-              'video-title': videoTitle,
-            },
-          },
-        })
-
-        upload.on('httpUploadProgress', (progress) => {
-          if (progress.loaded && progress.total) {
-            setProgress(Math.round((progress.loaded / progress.total) * 100))
-          }
-        })
-
-        await upload.done()
-
+        await uploadToS3(selectedFile, videoTitle, setProgress)
         setUploadState('File uploaded successfully')
-        setUploading(false)
       } catch (err) {
         console.error('Error uploading file: ', err)
-        setError('Failed to upload the file')
+        setError(`Failed to upload the file. Reason: ${err}`)
+      } finally {
         setUploading(false)
       }
     }

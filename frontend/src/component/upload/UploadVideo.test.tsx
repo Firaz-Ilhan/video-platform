@@ -1,5 +1,5 @@
 import { render, fireEvent, waitFor, screen } from '@testing-library/react'
-import '@testing-library/jest-dom/extend-expect'
+import '@testing-library/jest-dom'
 import { UploadVideo } from './UploadVideo'
 import { useNavigate } from 'react-router-dom'
 import { Auth } from 'aws-amplify'

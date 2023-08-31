@@ -46,7 +46,6 @@ function useVideoData(userSub: string | null) {
   }, [userSub])
 
   async function getFile(key: string) {
-    console.log('key', key)
     try {
       const file = await Storage.get(key, {
         bucket: process.env.REACT_APP_AWS_VIDEO_S3_BUCKET,
@@ -54,7 +53,6 @@ function useVideoData(userSub: string | null) {
           public: '',
         },
       })
-      console.log(file, 'file')
       return file
     } catch (error) {
       console.error(`Failed to fetch video URL: ${error}`)

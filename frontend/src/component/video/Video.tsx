@@ -3,70 +3,52 @@ import {
   faThumbsDown,
   faThumbsUp,
 } from '@fortawesome/free-solid-svg-icons'
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {useAuthCheck} from '../../hooks/useAuthCheck'
+import {FeedbackButton} from './FeedbackButton'
 import {useAnimation} from './useAnimation'
 import {useUserSub} from './useUserSub'
 import {useVideoData} from './useVideoData'
+import {useVote} from './useVote'
 import './video.css'
-import {handleVote} from './voteUtils'
 
 const Video = () => {
   const {userSub} = useUserSub()
   useAuthCheck()
 
   const {
-    likeCount,
-    dislikeCount,
+    fetchedLikeCount,
+    fetchedDislikeCount,
     activeBtn,
     videoId,
     title,
     url,
     loading,
-    setLikeCount,
-    setDislikeCount,
-    setActiveBtn,
     refetch,
   } = useVideoData(userSub)
 
   const {animationState, handleAnimation} = useAnimation()
 
+  const {
+    vote,
+    likeCount,
+    dislikeCount,
+    activeBtn: btn,
+  } = useVote(
+    fetchedLikeCount,
+    fetchedDislikeCount,
+    activeBtn,
+    videoId,
+    userSub
+  )
+
   const handleLikeClick = async () => {
     handleAnimation('likeAnimate')
-    if (activeBtn === 'none') {
-      setLikeCount((prev) => prev + 1)
-      setActiveBtn('like')
-      await handleVote(videoId!, 'like', userSub)
-    } else if (activeBtn === 'like') {
-      setLikeCount((prev) => prev - 1)
-      setActiveBtn('none')
-      await handleVote(videoId!, 'remove', userSub)
-    } else if (activeBtn === 'dislike') {
-      setLikeCount((prev) => prev + 1)
-      setDislikeCount((prev) => prev - 1)
-      setActiveBtn('like')
-      await handleVote(videoId!, 'remove', userSub)
-      await handleVote(videoId!, 'like', userSub)
-    }
+    await vote('like')
   }
 
   const handleDislikeClick = async () => {
     handleAnimation('dislikeAnimate')
-    if (activeBtn === 'none') {
-      setDislikeCount((prev) => prev + 1)
-      setActiveBtn('dislike')
-      await handleVote(videoId!, 'dislike', userSub)
-    } else if (activeBtn === 'dislike') {
-      setDislikeCount((prev) => prev - 1)
-      setActiveBtn('none')
-      await handleVote(videoId!, 'remove', userSub)
-    } else if (activeBtn === 'like') {
-      setDislikeCount((prev) => prev + 1)
-      setLikeCount((prev) => prev - 1)
-      setActiveBtn('dislike')
-      await handleVote(videoId!, 'remove', userSub)
-      await handleVote(videoId!, 'dislike', userSub)
-    }
+    await vote('dislike')
   }
 
   return (
@@ -93,35 +75,32 @@ const Video = () => {
         </div>
       )}
       <div className="feedback">
-        <button
+        <FeedbackButton
           title="Click to like this video"
-          className={`btn ${activeBtn === 'like' ? 'like-active' : ''}`}
+          className={btn === 'like' ? 'like-active' : ''}
+          icon={faThumbsUp}
+          count={likeCount}
+          ariaLabel={`Like video. Current count: ${likeCount}`}
           onClick={handleLikeClick}
-          aria-label={`Like video. Current count: ${likeCount}`}>
-          <FontAwesomeIcon
-            icon={faThumbsUp}
-            bounce={!animationState.likeAnimate}
-          />
-          {likeCount}
-        </button>
-        <button
+          animationState={!animationState.likeAnimate}
+        />
+        <FeedbackButton
           title="Click to dislike this video"
-          className={`btn ${activeBtn === 'dislike' ? 'dislike-active' : ''}`}
+          className={btn === 'dislike' ? 'dislike-active' : ''}
+          icon={faThumbsDown}
+          count={dislikeCount}
+          ariaLabel={`Dislike video. Current count: ${dislikeCount}`}
           onClick={handleDislikeClick}
-          aria-label={`Dislike video. Current count: ${dislikeCount}`}>
-          <FontAwesomeIcon
-            icon={faThumbsDown}
-            bounce={!animationState.dislikeAnimate}
-          />
-          {dislikeCount}
-        </button>
-        <button
+          animationState={!animationState.dislikeAnimate}
+        />
+        <FeedbackButton
           title="Click to load the next video"
           className="btn"
-          aria-label="Load the next video"
-          onClick={refetch}>
-          <FontAwesomeIcon icon={faArrowCircleRight} />
-        </button>
+          icon={faArrowCircleRight}
+          onClick={refetch}
+          ariaLabel="Load the next video"
+          animationState={false}
+        />
       </div>
     </div>
   )

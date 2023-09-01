@@ -1,22 +1,43 @@
 import {API, Storage} from 'aws-amplify'
 import {useEffect, useState} from 'react'
 
+type VideoData = {
+  fetchedLikeCount: number
+  fetchedDislikeCount: number
+  activeBtn: 'none' | 'like' | 'dislike'
+  videoId: number | undefined
+  title: string
+  url: string
+  loading: boolean
+  error: string | null
+}
+
 function useVideoData(userSub: string | null) {
-  const [likeCount, setLikeCount] = useState(0)
-  const [dislikeCount, setDislikeCount] = useState(0)
-  const [activeBtn, setActiveBtn] = useState('none')
-  const [error, setError] = useState<string | null>(null)
-  const [videoId, setVideoId] = useState<number>()
-  const [title, setTitle] = useState('')
-  const [url, setUrl] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [videoData, setVideoData] = useState<VideoData>({
+    fetchedLikeCount: 0,
+    fetchedDislikeCount: 0,
+    activeBtn: 'none',
+    videoId: undefined,
+    title: '',
+    url: '',
+    loading: false,
+    error: null,
+  })
 
   const callLambdaFunction = async () => {
-    setLoading(true)
+    setVideoData((prevData) => ({
+      ...prevData,
+      loading: true,
+    }))
+
     if (!userSub) {
-      setLoading(false)
+      setVideoData((prevData) => ({
+        ...prevData,
+        loading: false,
+      }))
       return
     }
+
     try {
       const response = await API.get('video', '/', {
         queryStringParameters: {
@@ -25,19 +46,23 @@ function useVideoData(userSub: string | null) {
       })
 
       const {title, url, videoKey, likes, dislikes} = response.body.videoInfo
-      setTitle(title)
-      setVideoId(videoKey)
-      const fileUrl = (await getFile(url)) || ''
-      setUrl(fileUrl)
-
-      setLikeCount(likes)
-      setDislikeCount(dislikes)
-      setActiveBtn(response.body.userVote || 'none')
+      setVideoData({
+        fetchedLikeCount: likes,
+        fetchedDislikeCount: dislikes,
+        activeBtn: response.body.userVote || 'none',
+        videoId: videoKey,
+        title,
+        url: await getFile(url),
+        loading: false,
+        error: null,
+      })
     } catch (error) {
       console.log(error)
-      setError('Failed to fetch video details.')
-    } finally {
-      setLoading(false)
+      setVideoData((prevData: VideoData) => ({
+        ...prevData,
+        error: 'Failed to fetch video details.',
+        loading: false,
+      }))
     }
   }
 
@@ -56,24 +81,15 @@ function useVideoData(userSub: string | null) {
       return file
     } catch (error) {
       console.error(`Failed to fetch video URL: ${error}`)
-      setError(`Failed to fetch video URL: ${error}`)
+      setVideoData((prevData: VideoData) => ({
+        ...prevData,
+        error: `Failed to fetch video URL: ${error}`,
+      }))
+      return ''
     }
   }
 
-  return {
-    likeCount,
-    dislikeCount,
-    activeBtn,
-    videoId,
-    title,
-    url,
-    loading,
-    error,
-    setLikeCount,
-    setDislikeCount,
-    setActiveBtn,
-    refetch: callLambdaFunction,
-  }
+  return {...videoData, refetch: callLambdaFunction}
 }
 
 export {useVideoData}

@@ -1,36 +1,13 @@
 import {faBars, faX} from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {Auth, Hub} from 'aws-amplify'
-import {useEffect, useState} from 'react'
 import {Link} from 'react-router-dom'
 import './header.css'
+import {useAuthStatus} from './useAuthStatus'
 import {useMenuToggle} from './useMenuToggle'
 
 const Header = () => {
-  const [user, setUser] = useState(null)
-
+  const {user} = useAuthStatus()
   const {isOpen, toggleMenu} = useMenuToggle()
-
-  useEffect(() => {
-    Auth.currentAuthenticatedUser()
-      .then((user) => setUser(user))
-      .catch(() => setUser(null))
-
-    const listener = Hub.listen('auth', ({payload: {event, data}}) => {
-      switch (event) {
-        case 'signIn':
-          setUser(data)
-          break
-        case 'signOut':
-          setUser(null)
-          break
-        default:
-          break
-      }
-    })
-
-    return () => listener()
-  }, [])
 
   return (
     <header className="header">

@@ -43,10 +43,10 @@ const Profile = () => {
 
   return (
     <div className="profile-container">
-      <h2>Profile</h2>
       {user ? (
         <div className="profile-content">
-          <h3>Username: {user.username}</h3>
+          <h2>Profile</h2>
+          <p>Username: {user.username}</p>
           <p>Email: {user.attributes.email}</p>
           <button className="signout-button" onClick={handleSignOut}>
             Sign Out

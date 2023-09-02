@@ -19,8 +19,8 @@ const createMockDropEvent = (file: File): React.DragEvent<HTMLDivElement> => {
 }
 
 describe('useDragAndDrop', () => {
-  const renderUseDragAndDrop = (validateFn = jest.fn()) =>
-    renderHook(() => useDragAndDrop(validateFn))
+  const renderUseDragAndDrop = () =>
+    renderHook(() => useDragAndDrop())
 
   it('should handle drag over and set dragOver to true', () => {
     const {result} = renderUseDragAndDrop()
@@ -49,9 +49,8 @@ describe('useDragAndDrop', () => {
     expect(result.current.dragOver).toBe(false)
   })
 
-  it('should handle drop, validate file and set dragOver to false', () => {
-    const mockValidateFile = jest.fn()
-    const {result} = renderUseDragAndDrop(mockValidateFile)
+  it('should handle drop and set dragOver to false', () => {
+    const {result} = renderUseDragAndDrop()
 
     const testFile = new File([''], 'filename.txt', {type: 'text/plain'})
     act(() => {
@@ -59,7 +58,6 @@ describe('useDragAndDrop', () => {
       result.current.handleDrop(dropEvent)
     })
 
-    expect(mockValidateFile).toHaveBeenCalledWith(testFile)
     expect(result.current.dragOver).toBe(false)
   })
 })

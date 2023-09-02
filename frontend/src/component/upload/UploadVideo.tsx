@@ -4,13 +4,12 @@ import {
   faX,
 } from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import React, {useRef, useState} from 'react'
+import React, {useState} from 'react'
 import {useAuthCheck} from '../../hooks/useAuthCheck'
+import {DropZone} from './DropZone/DropZone'
 import './UploadVideo.css'
 import {uploadToS3} from './uploadService'
-import {useDragAndDrop} from './useDragAndDrop'
 import {useFileValidation} from './useFileValidation'
-
 
 const UploadVideo = () => {
   const [progress, setProgress] = useState(0)
@@ -21,21 +20,12 @@ const UploadVideo = () => {
   const {selectedFile, error, validateFile, setSelectedFile, setError} =
     useFileValidation()
 
-  const {dragOver, handleDrop, handleDragOver, handleDragLeave} =
-    useDragAndDrop(validateFile)
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
   useAuthCheck()
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       validateFile(e.target.files[0])
     }
-  }
-
-  const handleDropZoneClick = () => {
-    fileInputRef.current?.click()
   }
 
   const clearSelectedFile = () => {
@@ -59,6 +49,10 @@ const UploadVideo = () => {
     }
   }
 
+  const handleFileDropped = (file: File) => {
+    validateFile(file)
+  }
+
   return (
     <div className="upload-container">
       <div>
@@ -78,26 +72,11 @@ const UploadVideo = () => {
           />
         </div>
 
-        <div
-          id="dropZone"
-          className={`drop-zone ${dragOver ? 'drag-over' : ''}`}
-          onDrop={uploading ? undefined : handleDrop}
-          onDragOver={uploading ? undefined : handleDragOver}
-          onDragLeave={uploading ? undefined : handleDragLeave}
-          onClick={uploading ? undefined : handleDropZoneClick}>
-          Drag and drop a video file here or click to select
-          <input
-            ref={fileInputRef}
-            id="fileUpload"
-            type="file"
-            accept="video/*"
-            onChange={handleFileInput}
-            aria-label="Upload a video"
-            aria-describedby="fileUploadError"
-            hidden
-            disabled={uploading}
-          />
-        </div>
+        <DropZone
+          onFileDropped={handleFileDropped}
+          uploading={uploading}
+          onFileSelected={handleFileInput}
+        />
 
         <div className="selected-file">
           {selectedFile ? (

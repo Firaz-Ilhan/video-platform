@@ -1,14 +1,15 @@
 import {useState} from 'react'
 
-const useDragAndDrop = (validateFile: (file: File) => void) => {
+const useDragAndDrop = () => {
   const [dragOver, setDragOver] = useState(false)
+  const [droppedFile, setDroppedFile] = useState<File | null>(null)
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (e.dataTransfer.items) {
       const file = e.dataTransfer.items[0].getAsFile()
       if (file) {
-        validateFile(file)
+        setDroppedFile(file)
       }
     }
     setDragOver(false)
@@ -24,7 +25,7 @@ const useDragAndDrop = (validateFile: (file: File) => void) => {
     setDragOver(false)
   }
 
-  return {dragOver, handleDrop, handleDragOver, handleDragLeave}
+  return {dragOver, droppedFile, handleDrop, handleDragOver, handleDragLeave}
 }
 
 export {useDragAndDrop}

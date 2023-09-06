@@ -155,41 +155,6 @@ resource "aws_media_convert_queue" "mediaconvert_queue" {
   name = "queue"
 }
 
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_file = "${path.module}/serverless/media_conversion_lambda.py"
-  output_path = "${path.module}/lambda.zip"
-}
-
-resource "aws_lambda_function" "media_conversion_lambda" {
-  function_name    = "media_conversion_lambda"
-  handler          = "media_conversion_lambda.lambda_handler"
-  role             = aws_iam_role.lambda_exec.arn
-  filename         = data.archive_file.lambda_zip.output_path
-  source_code_hash = filebase64sha256(data.archive_file.lambda_zip.output_path)
-  runtime          = "python3.10"
-
-  environment {
-    variables = {
-      JOB_TEMPLATE       = "mediaconvert-template"
-      MEDIACONVERT_QUEUE = aws_media_convert_queue.mediaconvert_queue.arn
-      MEDIACONVERT_ROLE  = aws_iam_role.mediaconvert_role.arn
-      REGION_NAME        = var.aws_region
-      S3_OUTPUT          = var.second_bucket_name
-    }
-  }
-
-  // aws mediaconvert isn't supported by terraform yet
-  // needs aws cli installed and configured
-  provisioner "local-exec" {
-    // Alternatively, the script can be run in the aws cloud shell
-    command = "bash ${path.module}/create_mediaconvert_template.sh"
-    environment = {
-      S3_BUCKET = "s3://${aws_s3_bucket.second_bucket.bucket}/"
-    }
-  }
-}
-
 resource "aws_iam_role" "lambda_exec" {
   name = "lambda_exec_role"
 
@@ -302,62 +267,3 @@ resource "aws_iam_policy" "cognito_create_userpool_policy" {
 }
 EOF
 }
-
-variable "identity_pool_name" {
-  description = "The name of the Cognito Identity Pool"
-  type        = string
-  default     = "MyIdentityPool"
-}
-
-variable "allow_unauthenticated_identities" {
-  description = "Whether to allow unauthenticated identities or not"
-  type        = bool
-  default     = false
-}
-
-variable "developer_provider_name" {
-  description = "The developer provider name"
-  type        = string
-  default     = "dev"
-}
-
-resource "aws_cognito_identity_pool" "main" {
-  identity_pool_name               = var.identity_pool_name
-  allow_unauthenticated_identities = var.allow_unauthenticated_identities
-
-  cognito_identity_providers {
-    client_id     = aws_cognito_user_pool_client.main.id
-    provider_name = aws_cognito_user_pool.main.endpoint
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_cognito_user_pool" "main" {
-  name = "my_user_pool"
-
-}
-
-resource "aws_cognito_user_pool_client" "main" {
-  name = "my_user_pool_client"
-
-
-  user_pool_id = aws_cognito_user_pool.main.id
-
-  explicit_auth_flows = [
-    "ALLOW_USER_SRP_AUTH",
-    "ALLOW_REFRESH_TOKEN_AUTH"
-  ]
-}
-
-resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
-
-  roles = {
-    "authenticated"   = aws_iam_role.authenticated.arn
-    "unauthenticated" = aws_iam_role.unauthenticated.arn
-  }
-}
-

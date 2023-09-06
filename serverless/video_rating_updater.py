@@ -81,11 +81,6 @@ def main(event, votes_table, video_table):
 def build_response(status_code, message):
     return {
         "statusCode": status_code,
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
-        },
         "body": json.dumps({"message": message}),
     }
 

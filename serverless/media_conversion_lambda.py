@@ -60,7 +60,7 @@ def get_next_video_id(table):
 def store_in_dynamodb(bucket: str, key: str, title: str):
     """Store video metadata and URL in DynamoDB"""
     dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('test')
+    table = dynamodb.Table(get_environment_variable("DYNAMO_DB_TABLE"))
 
     video_id = get_next_video_id(table)
     print(type(video_id))

@@ -1,6 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react'
-import { Auth } from 'aws-amplify'
-import { useUserSub } from './useUserSub'
+import {renderHook, waitFor} from '@testing-library/react'
+import {Auth} from 'aws-amplify'
+import {useUserSub} from './useUserSub'
 
 jest.mock('aws-amplify', () => ({
   Auth: {
@@ -8,7 +8,16 @@ jest.mock('aws-amplify', () => ({
   },
 }))
 
+const mockedCurrentAuthenticatedUser =
+  Auth.currentAuthenticatedUser as jest.MockedFunction<
+    typeof Auth.currentAuthenticatedUser
+  >
+
 describe('useUserSub', () => {
+  afterEach(() => {
+    mockedCurrentAuthenticatedUser.mockReset()
+  })
+
   it('fetches user sub correctly', async () => {
     const mockUserAttributes = {
       sub: 'mock-sub',
@@ -16,8 +25,7 @@ describe('useUserSub', () => {
       email_verified: 'true',
     }
 
-    //@ts-ignore
-    Auth.currentAuthenticatedUser.mockResolvedValue({
+    mockedCurrentAuthenticatedUser.mockResolvedValue({
       attributes: mockUserAttributes,
     })
 
@@ -42,8 +50,7 @@ describe('useUserSub', () => {
   })
 
   it('handles error correctly', async () => {
-    //@ts-ignore
-    Auth.currentAuthenticatedUser.mockRejectedValue(new Error('Mock error'))
+    mockedCurrentAuthenticatedUser.mockRejectedValue(new Error('Mock error'))
 
     const {result} = renderHook(() => useUserSub())
 

@@ -52,3 +52,69 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "unauthenticated" = aws_iam_role.cognito_unauthenticated_role.arn
   }
 }
+
+resource "aws_iam_role" "cognito_authenticated_role" {
+  name               = "CognitoAuthenticatedRole"
+  assume_role_policy = <<EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRoleWithWebIdentity",
+        "Principal": {
+          "Federated": "cognito-identity.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  }
+  EOF
+}
+
+resource "aws_iam_role" "cognito_unauthenticated_role" {
+  name               = "CognitoUnauthenticatedRole"
+  assume_role_policy = <<EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRoleWithWebIdentity",
+        "Principal": {
+          "Federated": "cognito-identity.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  }
+  EOF
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_authenticated_policy_attach" {
+  role       = aws_iam_role.cognito_authenticated_role.name
+  policy_arn = aws_iam_policy.cognito_userpool_creation_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_unauthenticated_policy_attach" {
+  role       = aws_iam_role.cognito_unauthenticated_role.name
+  policy_arn = aws_iam_policy.cognito_userpool_creation_policy.arn
+}
+
+resource "aws_iam_policy" "cognito_userpool_creation_policy" {
+  name        = "CognitoUserPoolCreationPolicy"
+  description = "Policy to allow cognito-idp:CreateUserPool"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "cognito-idp:CreateUserPool",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}

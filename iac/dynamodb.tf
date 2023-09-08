@@ -1,6 +1,6 @@
 resource "aws_dynamodb_table" "video_metadata" {
-  name           = "VideoMetadata"
-  billing_mode   = "PAY_PER_REQUEST"
+  name           = "VideoMetadataTable"
+  billing_mode   = "PROVISIONED"
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "videoKey"
@@ -11,13 +11,13 @@ resource "aws_dynamodb_table" "video_metadata" {
   }
 
   tags = {
-    Name = "VideoMetadata"
+    Name = "VideoMetadataTable"
   }
 }
 
 resource "aws_dynamodb_table" "votes_table" {
   name           = "VotesTable"
-  billing_mode   = "PAY_PER_REQUEST"
+  billing_mode   = "PROVISIONED"
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "userId"

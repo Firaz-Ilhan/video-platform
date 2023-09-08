@@ -5,7 +5,7 @@ s3_bucket="${S3_BUCKET}"
 
 payload='
 {
-  "Name": "my_template",
+  "Name": "mediaconvert-template",
   "Settings": {
     "TimecodeConfig": {
       "Source": "ZEROBASED"
@@ -20,15 +20,13 @@ payload='
               "Mp4Settings": {}
             },
             "VideoDescription": {
+              "ScalingBehavior": "DEFAULT",
               "CodecSettings": {
                 "Codec": "H_264",
                 "H264Settings": {
-                  "ParNumerator": 16,
                   "MaxBitrate": 250000,
-                  "ParDenominator": 9,
                   "RateControlMode": "QVBR",
-                  "SceneChangeDetect": "TRANSITION_DETECTION",
-                  "ParControl": "SPECIFIED"
+                  "SceneChangeDetect": "TRANSITION_DETECTION"
                 }
               }
             },

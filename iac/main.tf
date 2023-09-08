@@ -15,24 +15,18 @@ variable "aws_region" {
 variable "access_key" {
   description = "AWS Access Key"
   type        = string
-  sensitive   = true
 }
 
 variable "secret_key" {
   description = "AWS Secret Key"
   type        = string
-  sensitive   = true
 }
 
-variable "first_bucket_name" {
+variable "upload_bucket_name" {
   type = string
 }
 
-variable "second_bucket_name" {
-  type = string
-}
-
-variable "user_arn" {
+variable "video_bucket_name" {
   type = string
 }
 
@@ -42,83 +36,108 @@ provider "aws" {
   secret_key = var.secret_key
 }
 
-resource "aws_s3_bucket" "first_bucket" {
-  bucket = var.first_bucket_name
+resource "aws_s3_bucket" "upload_bucket" {
+  bucket = var.upload_bucket_name
   acl    = "private"
 }
 
-resource "aws_s3_bucket" "second_bucket" {
-  bucket = var.second_bucket_name
+resource "aws_s3_bucket" "video_bucket" {
+  bucket = var.video_bucket_name
   acl    = "private"
 }
 
-resource "aws_s3_bucket_policy" "first_bucket_policy" {
-  bucket = aws_s3_bucket.first_bucket.id
+resource "aws_s3_bucket_policy" "upload_lambda_access_policy" {
+  bucket = aws_s3_bucket.upload_bucket.id
 
   policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "Policy1683915863869",
-  "Statement": [
-    {
-      "Sid": "Stmt1683915859261",
-      "Effect": "Allow",
-      "Principal": {
-          "Service": "lambda.amazonaws.com"
-      },
-      "Action": "s3:*",
-      "Resource": "arn:aws:s3:::${var.first_bucket_name}/*"
-    }
-  ]
-}
-POLICY
+  {
+    "Version": "2012-10-17",
+    "Id": "PolicyForLambdaUploadAccess",
+    "Statement": [
+      {
+        "Sid": "AllowLambdaAccessToUploads",
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "lambda.amazonaws.com"
+        },
+        "Action": "s3:*",
+        "Resource": "arn:aws:s3:::${var.upload_bucket_name}/*"
+      }
+    ]
+  }
+  POLICY
 }
 
-resource "aws_s3_bucket_policy" "second_bucket_policy" {
-  bucket = aws_s3_bucket.second_bucket.id
+resource "aws_s3_bucket_policy" "video_bucket_user_access_policy" {
+  bucket = aws_s3_bucket.video_bucket.id
 
   policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "Policy1683915863869",
-  "Statement": [
-    {
-      "Sid": "Stmt1683915859261",
-      "Effect": "Allow",
-      "Principal": {
-          "Service": "lambda.amazonaws.com"
-      },
-      "Action": "s3:*",
-      "Resource": "arn:aws:s3:::${var.second_bucket_name}/*"
-    }
-  ]
-}
-POLICY
+  {
+      "Version": "2012-10-17",
+      "Statement": [
+          {
+              "Sid": "ListUserSpecificObjects",
+              "Effect": "Allow",
+              "Principal": {
+                  "AWS": "${aws_iam_role.cognito_authenticated_role.arn}"
+              },
+              "Action": "s3:*",
+              "Resource": "arn:aws:s3:::${var.video_bucket_name}",
+              "Condition": {
+                  "StringLike": {
+                      "s3:prefix": "cognito/WebApp/$${cognito-identity.amazonaws.com:sub}/*"
+                  }
+              }
+          },
+          {
+              "Sid": "ReadWriteDeleteUserSpecificObjects",
+              "Effect": "Allow",
+              "Principal": {
+                 "AWS": "${aws_iam_role.cognito_authenticated_role.arn}"
+              },
+              "Action": [
+                  "s3:DeleteObject",
+                  "s3:GetObject",
+                  "s3:PutObject"
+              ],
+              "Resource": "arn:aws:s3:::${var.video_bucket_name}/cognito/WebApp/$${cognito-identity.amazonaws.com:sub}/*"
+          },
+          {
+              "Effect": "Allow",
+              "Principal": {
+                  "AWS": "${aws_iam_role.cognito_authenticated_role.arn}"
+              },
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::${var.video_bucket_name}/*"
+          }
+      ]
+  }
+  POLICY
 }
 
-resource "aws_iam_role" "mediaconvert_role" {
-  name = "mediaconvert_role"
+resource "aws_iam_role" "mediaconvert_execution_role" {
+  name = "MediaConvertExeRole"
 
   assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "mediaconvert.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "mediaconvert.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  }
+  EOF
 }
 
-resource "aws_iam_role_policy" "mediaconvert_role_policy" {
-  name = "mediaconvert_role_policy"
-  role = aws_iam_role.mediaconvert_role.id
+resource "aws_iam_role_policy" "mediaconvert_s3_access_policy" {
+  name = "MediaConvertS3AccessPolicy"
+  role = aws_iam_role.mediaconvert_execution_role.id
 
   policy = <<EOF
 {
@@ -133,123 +152,111 @@ resource "aws_iam_role_policy" "mediaconvert_role_policy" {
         "s3:PutObjectAcl"
       ],
       "Resource": [
-        "${aws_s3_bucket.first_bucket.arn}",
-        "${aws_s3_bucket.first_bucket.arn}/*",
-        "${aws_s3_bucket.second_bucket.arn}",
-        "${aws_s3_bucket.second_bucket.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "mediaconvert:*"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+          "${aws_s3_bucket.upload_bucket.arn}",
+          "${aws_s3_bucket.upload_bucket.arn}/*",
+          "${aws_s3_bucket.video_bucket.arn}",
+          "${aws_s3_bucket.video_bucket.arn}/*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "mediaconvert:*"
+        ],
+        "Resource": "*"
+      }
+    ]
+  }
+  EOF
 }
 
 resource "aws_media_convert_queue" "mediaconvert_queue" {
-  name = "queue"
+  name = "MediaConversionQueue"
 }
 
-resource "aws_iam_role" "lambda_exec" {
-  name = "lambda_exec_role"
+resource "aws_iam_role" "lambda_execution_role" {
+  name = "LambdaExecutionRole"
 
   assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  }
+  EOF
 }
-EOF
 
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_exec_policy_attach" {
-  role       = aws_iam_role.lambda_exec.name
+resource "aws_iam_role_policy_attachment" "lambda_execution_basic_policy_attach" {
+  role       = aws_iam_role.lambda_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = aws_s3_bucket.first_bucket.id
-
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.media_conversion_lambda.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-}
-
-resource "aws_lambda_permission" "allow_bucket" {
-  statement_id  = "AllowExecutionFromS3Bucket"
+resource "aws_lambda_permission" "s3_invoke_lambda_permission" {
+  statement_id  = "AllowS3InvokeLambda"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.media_conversion_lambda.function_name
+  function_name = aws_lambda_function.media_conversion_lambda_function.function_name
   principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.first_bucket.arn
+  source_arn    = aws_s3_bucket.video_bucket.arn
 }
 
-resource "aws_iam_role" "authenticated" {
-  name               = "cognito_authenticated"
+resource "aws_iam_role" "cognito_authenticated_role" {
+  name               = "CognitoAuthenticatedRole"
   assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRoleWithWebIdentity",
+        "Principal": {
+          "Federated": "cognito-identity.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  }
+  EOF
 }
 
-resource "aws_iam_role" "unauthenticated" {
-  name               = "cognito_unauthenticated"
+resource "aws_iam_role" "cognito_unauthenticated_role" {
+  name               = "CognitoUnauthenticatedRole"
   assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-
-resource "aws_iam_role_policy_attachment" "cognito_authenticated" {
-  role       = aws_iam_role.authenticated.name
-  policy_arn = aws_iam_policy.cognito_create_userpool_policy.arn
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRoleWithWebIdentity",
+        "Principal": {
+          "Federated": "cognito-identity.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  }
+  EOF
 }
 
-resource "aws_iam_role_policy_attachment" "cognito_unauthenticated" {
-  role       = aws_iam_role.unauthenticated.name
-  policy_arn = aws_iam_policy.cognito_create_userpool_policy.arn
+resource "aws_iam_role_policy_attachment" "cognito_authenticated_policy_attach" {
+  role       = aws_iam_role.cognito_authenticated_role.name
+  policy_arn = aws_iam_policy.cognito_userpool_creation_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "cognito_unauthenticated_policy_attach" {
+  role       = aws_iam_role.cognito_unauthenticated_role.name
+  policy_arn = aws_iam_policy.cognito_userpool_creation_policy.arn
+}
 
-resource "aws_iam_policy" "cognito_create_userpool_policy" {
-  name        = "cognito_create_userpool_policy"
+resource "aws_iam_policy" "cognito_userpool_creation_policy" {
+  name        = "CognitoUserPoolCreationPolicy"
   description = "Policy to allow cognito-idp:CreateUserPool"
 
   policy = <<EOF
@@ -258,9 +265,7 @@ resource "aws_iam_policy" "cognito_create_userpool_policy" {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "cognito-idp:CreateUserPool"
-      ],
+      "Action": "cognito-idp:CreateUserPool",
       "Resource": "*"
     }
   ]

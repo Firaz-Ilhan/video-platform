@@ -1,16 +1,16 @@
 variable "identity_pool_name" {
-  type        = string
-  default     = "MyIdentityPool"
+  type    = string
+  default = "MyIdentityPool"
 }
 
 variable "allow_unauthenticated_identities" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }
 
 variable "developer_provider_name" {
-  type        = string
-  default     = "dev"
+  type    = string
+  default = "dev"
 }
 
 resource "aws_cognito_identity_pool" "main" {
@@ -48,8 +48,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
   roles = {
-    "authenticated"   = aws_iam_role.authenticated.arn
-    "unauthenticated" = aws_iam_role.unauthenticated.arn
+    "authenticated"   = aws_iam_role.cognito_authenticated_role.arn
+    "unauthenticated" = aws_iam_role.cognito_unauthenticated_role.arn
   }
 }
-

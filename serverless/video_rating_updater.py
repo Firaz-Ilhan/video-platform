@@ -8,26 +8,10 @@ DISLIKE = "dislike"
 REMOVE = "remove"
 ALLOWED_ACTIONS = [LIKE, DISLIKE, REMOVE]
 
-class LazyResource:
-    def __init__(self):
-        self._resource = None
+dynamodb = boto3.resource("dynamodb")
 
-    def get(self):
-        if not self._resource:
-            self._resource = boto3.resource("dynamodb")
-        return self._resource
-
-
-DYNAMODB = LazyResource()
-
-
-def get_votes_table():
-    return DYNAMODB.get().Table(os.getenv("dynamodb_votes_table_name"))
-
-
-def get_video_table():
-    return DYNAMODB.get().Table(os.getenv("dynamodb_video_table_name"))
-
+video_table = dynamodb.Table(os.getenv("dynamodb_video_table"))
+votes_table = dynamodb.Table(os.getenv("dynamodb_votes_table"))
 
 def process_vote(event, votes_table, video_table):
     video_key = event.get("videoKey")
@@ -61,20 +45,19 @@ def process_vote(event, votes_table, video_table):
             record_user_vote(user_id, video_key, action, votes_table)
             return 200, "Vote updated successfully"
         except Exception as e:
-            print.error(f"Error updating vote: {str(e)}")
+            print(f"Error updating vote: {str(e)}")
             return 500, "Error updating vote"
 
 
 def lambda_handler(event, context):
-    return main(event, get_votes_table(), get_video_table())
-
+        return main(event, votes_table, video_table)
 
 def main(event, votes_table, video_table):
     try:
         status_code, message = process_vote(event, votes_table, video_table)
         return build_response(status_code, message)
     except Exception as e:
-        print.error(f"Unhandled exception: {str(e)}")
+        print(f"Unhandled exception: {str(e)}")
         return build_response(500, str(e))
 
 

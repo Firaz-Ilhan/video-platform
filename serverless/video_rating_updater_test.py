@@ -1,41 +1,117 @@
+import os
 import unittest
-from unittest.mock import patch, Mock
-from video_rating_updater import lambda_handler
+from unittest import mock
+from unittest.mock import MagicMock, patch, Mock
+
+os.environ["dynamodb_video_table"] = "video"
+os.environ["dynamodb_votes_table"] = "votes"
+
+with patch("boto3.resource", return_value=MagicMock()):
+    from video_rating_updater import lambda_handler
+
 
 class TestLambdaFunction(unittest.TestCase):
     def setUp(self):
-        self.mock_event = {"videoKey": 1, "action": "like", "userId": "test_user_id"}
+        self.mock_event = {
+            "videoKey": "sampleVideoKey",
+            "userId": "sampleUserId",
+            "action": "like",
+        }
+
         self.mock_votes_table = Mock()
-        self.mock_get_patcher = patch("video_rating_updater.DYNAMODB.get")
-        self.mock_get = self.mock_get_patcher.start()
-        self.mock_get.return_value.Table.return_value = self.mock_votes_table
+        self.mock_video_table = Mock()
+
+        self.vote_table_patch = patch(
+            "video_rating_updater.votes_table", self.mock_votes_table
+        )
+        self.video_table_patch = patch(
+            "video_rating_updater.video_table", self.mock_video_table
+        )
+
+        self.vote_table_patch.start()
+        self.video_table_patch.start()
 
     def tearDown(self):
-        self.mock_event = {"videoKey": 1, "action": "like", "userId": "test_user_id"}
-        self.mock_get_patcher.stop()
+        self.vote_table_patch.stop()
+        self.video_table_patch.stop()
 
-    def test_vote_actions(self):
-        test_cases = [
-            {"action": "invalid_action", "return": {}, "status": 400, "message": "Invalid vote action"},
-            {"action": None, "return": {}, "status": 400, "message": "Required parameters missing"},
-            {"action": "remove", "return": {"Item": {"vote": "like"}}, "status": 200, "message": "Vote removed successfully"},
-            {"action": "dislike", "return": {"Item": {"vote": "like"}}, "status": 200, "message": "Vote updated successfully"},
-            {"action": "like", "return": {"Item": {"vote": "like"}}, "status": 200, "message": "User has already voted with the same action for this video"},
-            {"action": "like", "return": {}, "status": 200, "message": "Vote registered successfully"}
-        ]
+    def test_invalid_vote_action(self):
+        self.mock_event["action"] = "invalid_action"
 
-        for tc in test_cases:
-            with self.subTest(tc=tc):
-                if tc["action"] is not None:
-                    self.mock_event["action"] = tc["action"]
-                else:
-                    del self.mock_event["action"]
-                
-                self.mock_votes_table.get_item.return_value = tc["return"]
-                response = lambda_handler(self.mock_event, None)
+        response = lambda_handler(self.mock_event, None)
 
-                self.assertEqual(response["statusCode"], tc["status"])
-                self.assertIn(tc["message"], response["body"])
+        self.assertEqual(response["statusCode"], 400)
+        self.assertIn("Invalid vote action", response["body"])
+
+    def test_invalid_parameters(self):
+        invalid_event = {
+            "videoKey": "sampleVideoKey",
+            # Missing userId and action
+        }
+
+        response = lambda_handler(invalid_event, None)
+
+        self.assertEqual(response["statusCode"], 400)
+        self.assertIn("Required parameters missing", response["body"])
+
+    def test_vote_registration(self):
+        self.mock_votes_table.get_item.return_value = {"Item": None}
+
+        response = lambda_handler(self.mock_event, None)
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertIn("Vote registered successfully", response["body"])
+        self.mock_votes_table.put_item.assert_called_once()
+        self.mock_video_table.update_item.assert_called_once()
+
+    def test_vote_update(self):
+        self.mock_event["action"] = "dislike"
+        self.mock_votes_table.get_item.return_value = {
+            "Item": {
+                "userId": "sampleUserId",
+                "videoKey": "sampleVideoKey",
+                "vote": "like",
+            }
+        }
+
+        response = lambda_handler(self.mock_event, None)
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertIn("Vote updated successfully", response["body"])
+        self.mock_video_table.update_item.assert_called()
+
+    def test_vote_removal(self):
+        self.mock_event["action"] = "remove"
+        self.mock_votes_table.get_item.return_value = {
+            "Item": {
+                "userId": "sampleUserId",
+                "videoKey": "sampleVideoKey",
+                "vote": "like",
+            }
+        }
+
+        response = lambda_handler(self.mock_event, None)
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertIn("Vote removed successfully", response["body"])
+        self.mock_votes_table.delete_item.assert_called_once()
+
+    def test_duplicate_vote(self):
+        self.mock_votes_table.get_item.return_value = {
+            "Item": {
+                "userId": "sampleUserId",
+                "videoKey": "sampleVideoKey",
+                "vote": "like",
+            }
+        }
+
+        response = lambda_handler(self.mock_event, None)
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertIn(
+            "User has already voted with the same action for this video",
+            response["body"],
+        )
 
 
 if __name__ == "__main__":

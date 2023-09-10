@@ -54,12 +54,12 @@ const Video = () => {
   return (
     <div className="container">
       {loading ? (
-        <div className=" box">
+        <div className="box dashed">
           <div className="loading-skeleton"></div>{' '}
           <div className="title-placeholder"></div>{' '}
         </div>
       ) : (
-        <div className="box">
+        <div className="box dashed">
           {url && (
             <div className="video-wrapper">
               <video controls key={url}>
@@ -74,7 +74,7 @@ const Video = () => {
           </div>
         </div>
       )}
-      <div className="feedback">
+      <div className="feedback dashed">
         <FeedbackButton
           title="Click to like this video"
           className={btn === 'like' ? 'like-active' : ''}

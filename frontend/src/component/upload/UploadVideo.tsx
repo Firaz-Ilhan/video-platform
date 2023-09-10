@@ -54,7 +54,7 @@ const UploadVideo = () => {
   }
 
   return (
-    <div className="upload-container">
+    <div className="upload-container dashed">
       <div>
         <h2>Upload a Video</h2>
       </div>

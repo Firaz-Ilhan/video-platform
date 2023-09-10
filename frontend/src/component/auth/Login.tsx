@@ -41,7 +41,7 @@ const Login = () => {
   }
 
   return (
-    <div className="authForm">
+    <div className="authForm dashed">
       <h2 id="loginHeader">Login</h2>
       <form onSubmit={handleSubmit}>
         <div className="formControl">

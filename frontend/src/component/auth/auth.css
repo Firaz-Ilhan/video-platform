@@ -2,9 +2,6 @@
   width: 300px;
   margin: 0 auto;
   padding: 20px;
-  border: 2px dashed black;
-  border-radius: 5px;
-  background-color: white;
 }
 
 .authForm h2 {

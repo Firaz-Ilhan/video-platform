@@ -44,7 +44,7 @@ const Profile = () => {
   return (
     <div className="profile-container">
       {user ? (
-        <div className="profile-content">
+        <div className="profile-content dashed">
           <h2>Profile</h2>
           <p>Username: {user.username}</p>
           <p>Email: {user.attributes.email}</p>

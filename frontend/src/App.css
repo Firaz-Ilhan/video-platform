@@ -1,5 +1,5 @@
 :root {
-  --background: #f9fafb;
+  --background: white;
   --primary: #6d46c3;
   --primary-hover: #371e83;
   --secondary: #2e7a11;
@@ -7,10 +7,10 @@
   --danger: #db375f;
   --info: #1982db;
   --input-animation-duration: 0.1s;
-  --form-text: #333;
-} 
+  --border: #ccc;
+}
 
-html{
+html {
   background-color: var(--background);
 }
 
@@ -20,9 +20,14 @@ main {
 }
 
 input {
-  transition: background-color 0.4s linear, border-color 0.4s linear,
-    color 0.4s linear, box-shadow 0.4s linear, transform 0.4s ease;
-  transition: background-color var(--input-animation-duration) linear,
+  transition:
+    background-color 0.4s linear,
+    border-color 0.4s linear,
+    color 0.4s linear,
+    box-shadow 0.4s linear,
+    transform 0.4s ease;
+  transition:
+    background-color var(--input-animation-duration) linear,
     border-color var(--input-animation-duration) linear,
     color var(--input-animation-duration) linear,
     box-shadow var(--input-animation-duration) linear,
@@ -30,7 +35,7 @@ input {
 }
 
 input {
-  background-color: #e7e7e7;
+  background-color: #edeff2;
   font-family: inherit;
   font-size: inherit;
   margin-right: 6px;
@@ -51,7 +56,7 @@ button {
   margin-bottom: 6px;
   padding: 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   outline: none;
   cursor: pointer;
 }
@@ -80,5 +85,11 @@ h2 {
 
 label {
   font-weight: 500;
+}
 
+.dashed {
+  background-color: var(--background);
+  border: 2px dashed var(--border);
+  border-radius: 4px;
+  padding: 0.8em;
 }

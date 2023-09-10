@@ -23,7 +23,7 @@ const Confirmation = () => {
   };
 
   return (
-    <div className="authForm">
+    <div className="authForm dashed">
       <h2 id="authHeader">Confirm Registration</h2>
       <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
         <div className="formControl">

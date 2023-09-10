@@ -42,7 +42,7 @@ const Register = () => {
   }
 
   return (
-    <div className="authForm">
+    <div className="authForm dashed">
       <h2 id="authHeader">Register</h2>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="formControl">

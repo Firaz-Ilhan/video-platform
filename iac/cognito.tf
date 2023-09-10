@@ -30,6 +30,15 @@ resource "aws_cognito_identity_pool" "main" {
 resource "aws_cognito_user_pool" "main" {
   name = "my_user_pool"
 
+  auto_verified_attributes = ["email"]
+
+  password_policy {
+    minimum_length    = 8
+    require_lowercase = false
+    require_numbers   = false
+    require_symbols   = false
+    require_uppercase = false
+  }
 }
 
 resource "aws_cognito_user_pool_client" "main" {
@@ -117,4 +126,64 @@ resource "aws_iam_policy" "cognito_userpool_creation_policy" {
   ]
 }
 EOF
+}
+
+resource "aws_iam_policy" "cognito_authenticated_s3_policy" {
+  name        = "CognitoAuthenticatedS3AccessPolicy"
+  description = "Policy to allow certain S3 actions on video bucket for authenticated users"
+
+  policy = <<-EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::${var.video_bucket_name}/*",
+      "Effect": "Allow"
+    },
+    {
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::${var.video_bucket_name}/*",
+      "Effect": "Allow"
+    },
+    {
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::${var.video_bucket_name}/*",
+      "Effect": "Allow"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::${var.upload_bucket_name}/*"
+    },
+    {
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "*",
+            "public/",
+            "public/*",
+            "protected/",
+            "protected/*",
+            "private/$${cognito-identity.amazonaws.com:sub}/",
+            "private/$${cognito-identity.amazonaws.com:sub}/*"
+          ]
+        }
+      },
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::${var.video_bucket_name}",
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_authenticated_s3_attach" {
+  role       = aws_iam_role.cognito_authenticated_role.name
+  policy_arn = aws_iam_policy.cognito_authenticated_s3_policy.arn
 }

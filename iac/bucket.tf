@@ -1,11 +1,25 @@
 resource "aws_s3_bucket" "upload_bucket" {
   bucket = var.upload_bucket_name
   acl    = "private"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+  }
 }
 
 resource "aws_s3_bucket" "video_bucket" {
   bucket = var.video_bucket_name
   acl    = "private"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = []
+  }
 }
 
 resource "aws_s3_bucket_policy" "upload_lambda_access_policy" {

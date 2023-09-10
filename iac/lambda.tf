@@ -40,7 +40,8 @@ resource "aws_lambda_function" "fetch_random_video_lambda_function" {
 
   environment {
     variables = {
-      dynamodb_table_name = aws_dynamodb_table.video_metadata.name
+      dynamodb_video_table = aws_dynamodb_table.video_metadata.name
+      dynamodb_votes_table = aws_dynamodb_table.votes_table.name
     }
   }
 }
@@ -61,8 +62,8 @@ resource "aws_lambda_function" "video_rating_updater_lambda_function" {
 
   environment {
     variables = {
-      dynamodb_votes_table_name = aws_dynamodb_table.votes_table.name,
-      dynamodb_video_table_name = aws_dynamodb_table.video_metadata.name
+      dynamodb_votes_table = aws_dynamodb_table.votes_table.name,
+      dynamodb_video_table = aws_dynamodb_table.video_metadata.name
     }
   }
 }
@@ -109,7 +110,10 @@ resource "aws_iam_policy" "lambda_dynamodb_access_policy" {
           "dynamodb:UpdateItem",
           "dynamodb:Query"
         ],
-        Resource = "${aws_dynamodb_table.video_metadata.arn}"
+        Resource = [
+          "${aws_dynamodb_table.video_metadata.arn}",
+          "${aws_dynamodb_table.votes_table.arn}"
+        ]
       }
     ]
   })
@@ -131,12 +135,11 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   }
 }
 
-resource "aws_lambda_permission" "s3_upload_invoke_lambda_permission" {
-  statement_id  = "AllowUploadBucketInvokeLambda"
+resource "aws_lambda_permission" "api_gateway_invoke_random_video_lambda_permission" {
+  statement_id  = "AllowAPIGatewayInvokeRandomVideoLambda"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.media_conversion_lambda_function.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.upload_bucket.arn
+  function_name = aws_lambda_function.fetch_random_video_lambda_function.function_name
+  principal     = "apigateway.amazonaws.com"
 }
 
 resource "aws_iam_role" "lambda_execution_role" {
@@ -172,6 +175,7 @@ resource "aws_lambda_permission" "s3_invoke_lambda_permission" {
   source_arn    = aws_s3_bucket.video_bucket.arn
 }
 
+# API Gateway
 resource "aws_api_gateway_rest_api" "media_operations_api" {
   name        = "MediaOperationsAPI"
   description = "API Gateway for Media Operations"
@@ -181,67 +185,161 @@ resource "aws_api_gateway_rest_api" "media_operations_api" {
   }
 }
 
-resource "aws_api_gateway_resource" "api_root_resource" {
-  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
-  parent_id   = aws_api_gateway_rest_api.media_operations_api.root_resource_id
-  path_part   = "{proxy+}"
-}
-
 resource "aws_api_gateway_method" "api_get_root_method" {
-  rest_api_id   = aws_api_gateway_rest_api.media_operations_api.id
-  resource_id   = aws_api_gateway_resource.api_root_resource.id
-  http_method   = "GET"
-  authorization = "NONE"
+  rest_api_id       = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id       = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method       = "GET"
+  authorization     = "NONE"
+  request_parameters = {
+    "method.request.querystring.userId" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "api_get_root_lambda_integration" {
   rest_api_id             = aws_api_gateway_rest_api.media_operations_api.id
-  resource_id             = aws_api_gateway_resource.api_root_resource.id
+  resource_id             = aws_api_gateway_rest_api.media_operations_api.root_resource_id
   http_method             = aws_api_gateway_method.api_get_root_method.http_method
   integration_http_method = "POST"
   type                    = "AWS"
   uri                     = aws_lambda_function.fetch_random_video_lambda_function.invoke_arn
-}
 
-resource "aws_api_gateway_deployment" "api_deployment" {
-  depends_on  = [
-    aws_api_gateway_integration.api_get_root_lambda_integration,
-    aws_api_gateway_integration.api_post_root_lambda_integration
-  ]
-  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
-  stage_name  = "prod"
-}
+  request_parameters = {
+    "integration.request.querystring.userId" = "method.request.querystring.userId"
+  }
 
-resource "aws_api_gateway_method" "api_options_root_method" {
-  rest_api_id   = aws_api_gateway_rest_api.media_operations_api.id
-  resource_id   = aws_api_gateway_resource.api_root_resource.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
+  request_templates = {
+    "application/json" = <<TEMPLATE
+{
+  "userId": "$input.params('userId')"
 }
-
-resource "aws_api_gateway_integration" "api_options_root_lambda_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.media_operations_api.id
-  resource_id             = aws_api_gateway_resource.api_root_resource.id
-  http_method             = aws_api_gateway_method.api_options_root_method.http_method
-  integration_http_method = "POST"
-  type                    = "MOCK"
+TEMPLATE
+  }
 }
 
 resource "aws_api_gateway_method" "api_post_root_method" {
   rest_api_id   = aws_api_gateway_rest_api.media_operations_api.id
-  resource_id   = aws_api_gateway_resource.api_root_resource.id
+  resource_id   = aws_api_gateway_rest_api.media_operations_api.root_resource_id
   http_method   = "POST"
   authorization = "NONE"
 }
 
+
 resource "aws_api_gateway_integration" "api_post_root_lambda_integration" {
   rest_api_id             = aws_api_gateway_rest_api.media_operations_api.id
-  resource_id             = aws_api_gateway_resource.api_root_resource.id
+  resource_id             = aws_api_gateway_rest_api.media_operations_api.root_resource_id
   http_method             = aws_api_gateway_method.api_post_root_method.http_method
   integration_http_method = "POST"
   type                    = "AWS"
   uri                     = aws_lambda_function.video_rating_updater_lambda_function.invoke_arn
+  
+  request_templates = {
+    "application/json" = <<TEMPLATE
+{
+  "body" : $input.json('$')
 }
+TEMPLATE
+  }
+}
+
+
+resource "aws_api_gateway_method_response" "api_post_cors_response" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method = aws_api_gateway_method.api_post_root_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "true"
+    "method.response.header.Access-Control-Allow-Methods" = "true"
+    "method.response.header.Access-Control-Allow-Origin"  = "true"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "api_post_cors_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method = aws_api_gateway_method.api_post_root_method.http_method
+  status_code = "200"
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.api_post_root_lambda_integration]
+}
+
+
+resource "aws_api_gateway_method_response" "api_get_cors_response" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method = aws_api_gateway_method.api_get_root_method.http_method
+  status_code      = "200"
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "true"
+    "method.response.header.Access-Control-Allow-Methods" = "true"
+    "method.response.header.Access-Control-Allow-Origin"  = "true"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "api_get_cors_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method = aws_api_gateway_method.api_get_root_method.http_method
+  status_code      = "200"
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+  depends_on = [aws_api_gateway_integration.api_get_root_lambda_integration]
+}
+
+resource "aws_api_gateway_method" "api_options_root_method" {
+  rest_api_id   = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id   = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+  request_parameters = {
+    "method.request.header.Access-Control-Allow-Headers" = false
+    "method.request.header.Access-Control-Allow-Methods" = false
+    "method.request.header.Access-Control-Allow-Origin"  = false
+  }
+}
+
+resource "aws_api_gateway_integration" "api_options_root_mock_integration" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method = aws_api_gateway_method.api_options_root_method.http_method
+  type        = "MOCK"
+}
+
+resource "aws_api_gateway_method_response" "api_options_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method = aws_api_gateway_method.api_options_root_method.http_method
+  status_code      = "200"
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "true"
+    "method.response.header.Access-Control-Allow-Methods" = "true"
+    "method.response.header.Access-Control-Allow-Origin"  = "true"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "api_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  resource_id = aws_api_gateway_rest_api.media_operations_api.root_resource_id
+  http_method = aws_api_gateway_method.api_options_root_method.http_method
+  status_code      = "200"
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+  depends_on = [aws_api_gateway_integration.api_options_root_mock_integration]
+}
+
 
 resource "aws_lambda_permission" "api_gateway_invoke_lambda_permission" {
   statement_id  = "AllowAPIGatewayInvokeLambda"
@@ -298,25 +396,31 @@ resource "aws_iam_role_policy_attachment" "lambda_passrole_policy_attach" {
   policy_arn = aws_iam_policy.lambda_passrole_policy.arn
 }
 
-
-
-resource "aws_api_gateway_method_response" "api_options_200_response" {
-  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
-  resource_id = aws_api_gateway_resource.api_root_resource.id
-  http_method = aws_api_gateway_method.api_options_root_method.http_method
-  status_code      = "200"
-  
-  response_models = {
-    "application/json" = "Empty"
-  }
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
+resource "aws_lambda_permission" "api_gateway_invoke_fetch_random_video_lambda_permission" {
+  statement_id  = "AllowAPIGatewayInvokeFetchRandomVideoLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.fetch_random_video_lambda_function.function_name
+  principal     = "apigateway.amazonaws.com"
 }
 
-output "api_endpoint_url" {
-  value = "https://${aws_api_gateway_rest_api.media_operations_api.id}.execute-api.${var.aws_region}.amazonaws.com/prod/"
+resource "aws_lambda_permission" "api_gateway_invoke_video_rating_updater_lambda_permission" {
+  statement_id  = "AllowAPIGatewayInvokeVideoRatingUpdaterLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.video_rating_updater_lambda_function.function_name
+  principal     = "apigateway.amazonaws.com"
+}
+
+resource "aws_api_gateway_deployment" "media_operations_api_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.media_operations_api.id
+  stage_name  = "prod"
+
+  triggers = {
+    redeployment = sha256(jsonencode(aws_api_gateway_rest_api.media_operations_api.body))
+  }
+
+  depends_on = [
+    aws_api_gateway_integration.api_get_root_lambda_integration,
+    aws_api_gateway_integration.api_options_root_mock_integration,
+    aws_api_gateway_integration.api_post_root_lambda_integration,
+  ]
 }

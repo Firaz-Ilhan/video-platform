@@ -15,7 +15,7 @@ def get_mediaconvert_client(region_name):
     """
     Initializes and returns a MediaConvert client using a specific endpoint.
     AWS MediaConvert requires the use of a service-specific endpoint, 
-    which varies by account and region based on account and region. 
+    which varies by account and region. 
     This function retrieves that endpoint and uses it to create the client.
     """
     mediaconvert = boto3.client("mediaconvert", region_name=region_name)

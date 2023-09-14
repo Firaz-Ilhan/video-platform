@@ -2,6 +2,7 @@ import os
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, patch, Mock
+import json
 
 os.environ["dynamodb_video_table"] = "video"
 os.environ["dynamodb_votes_table"] = "votes"
@@ -9,11 +10,10 @@ os.environ["dynamodb_votes_table"] = "votes"
 with patch("boto3.resource", return_value=MagicMock()):
     from video_rating_updater import lambda_handler
 
-
 class TestLambdaFunction(unittest.TestCase):
     def setUp(self):
         self.mock_event = {
-            "videoKey": "sampleVideoKey",
+            "videoKey": 1,
             "userId": "sampleUserId",
             "action": "like",
         }
@@ -41,18 +41,16 @@ class TestLambdaFunction(unittest.TestCase):
         response = lambda_handler(self.mock_event, None)
 
         self.assertEqual(response["statusCode"], 400)
-        self.assertIn("Invalid vote action", response["body"])
 
     def test_invalid_parameters(self):
         invalid_event = {
-            "videoKey": "sampleVideoKey",
+            "videoKey": 1,
             # Missing userId and action
         }
 
         response = lambda_handler(invalid_event, None)
 
         self.assertEqual(response["statusCode"], 400)
-        self.assertIn("Required parameters missing", response["body"])
 
     def test_vote_registration(self):
         self.mock_votes_table.get_item.return_value = {"Item": None}
@@ -60,7 +58,7 @@ class TestLambdaFunction(unittest.TestCase):
         response = lambda_handler(self.mock_event, None)
 
         self.assertEqual(response["statusCode"], 200)
-        self.assertIn("Vote registered successfully", response["body"])
+        self.assertIn("Vote registered successfully", json.loads(response["body"])["message"])
         self.mock_votes_table.put_item.assert_called_once()
         self.mock_video_table.update_item.assert_called_once()
 
@@ -69,7 +67,7 @@ class TestLambdaFunction(unittest.TestCase):
         self.mock_votes_table.get_item.return_value = {
             "Item": {
                 "userId": "sampleUserId",
-                "videoKey": "sampleVideoKey",
+                "videoKey": 1,
                 "vote": "like",
             }
         }
@@ -77,7 +75,7 @@ class TestLambdaFunction(unittest.TestCase):
         response = lambda_handler(self.mock_event, None)
 
         self.assertEqual(response["statusCode"], 200)
-        self.assertIn("Vote updated successfully", response["body"])
+        self.assertIn("Vote updated successfully", json.loads(response["body"])["message"])
         self.mock_video_table.update_item.assert_called()
 
     def test_vote_removal(self):
@@ -85,7 +83,7 @@ class TestLambdaFunction(unittest.TestCase):
         self.mock_votes_table.get_item.return_value = {
             "Item": {
                 "userId": "sampleUserId",
-                "videoKey": "sampleVideoKey",
+                "videoKey": 1,
                 "vote": "like",
             }
         }
@@ -93,14 +91,14 @@ class TestLambdaFunction(unittest.TestCase):
         response = lambda_handler(self.mock_event, None)
 
         self.assertEqual(response["statusCode"], 200)
-        self.assertIn("Vote removed successfully", response["body"])
+        self.assertIn("Vote removed successfully", json.loads(response["body"])["message"])
         self.mock_votes_table.delete_item.assert_called_once()
 
     def test_duplicate_vote(self):
         self.mock_votes_table.get_item.return_value = {
             "Item": {
                 "userId": "sampleUserId",
-                "videoKey": "sampleVideoKey",
+                "videoKey": 1,
                 "vote": "like",
             }
         }
@@ -110,7 +108,7 @@ class TestLambdaFunction(unittest.TestCase):
         self.assertEqual(response["statusCode"], 200)
         self.assertIn(
             "User has already voted with the same action for this video",
-            response["body"],
+            json.loads(response["body"])["message"],
         )
 
 

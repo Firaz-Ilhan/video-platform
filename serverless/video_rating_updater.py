@@ -2,27 +2,38 @@ import os
 import json
 import boto3
 from decimal import Decimal
-
-LIKE = "like"
-DISLIKE = "dislike"
-REMOVE = "remove"
-ALLOWED_ACTIONS = [LIKE, DISLIKE, REMOVE]
+from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
+from aws_lambda_powertools.utilities.validation import validate
 
 dynamodb = boto3.resource("dynamodb")
 
 video_table = dynamodb.Table(os.getenv("dynamodb_video_table"))
 votes_table = dynamodb.Table(os.getenv("dynamodb_votes_table"))
 
+LIKE = "like"
+DISLIKE = "dislike"
+REMOVE = "remove"
+ALLOWED_ACTIONS = [LIKE, DISLIKE, REMOVE]
+
+schema = {
+    "type": "object",
+    "properties": {
+        "videoKey": {"type": "integer", "minimum": 1},
+        "action": {"type": "string", "enum": ALLOWED_ACTIONS},
+        "userId": {"type": "string", "minLength": 1, "maxLength": 255},
+    },
+    "required": ["videoKey", "action", "userId"],
+}
+
 def process_vote(event, votes_table, video_table):
     video_key = event.get("videoKey")
     action = event.get("action")
     user_id = event.get("userId")
 
-    if not video_key or not action or not user_id:
-        return 400, "Required parameters missing"
-
-    if action not in ALLOWED_ACTIONS:
-        return 400, "Invalid vote action"
+    try:
+        validate(event=event, schema=schema)
+    except SchemaValidationError as e:
+        return 400, str(e)
 
     user_vote = votes_table.get_item(
         Key={"userId": user_id, "videoKey": video_key}
@@ -50,7 +61,8 @@ def process_vote(event, votes_table, video_table):
 
 
 def lambda_handler(event, context):
-        return main(event, votes_table, video_table)
+    return main(event, votes_table, video_table)
+
 
 def main(event, votes_table, video_table):
     try:

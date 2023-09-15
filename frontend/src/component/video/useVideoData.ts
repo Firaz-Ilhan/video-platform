@@ -12,6 +12,8 @@ type VideoData = {
   error: string | null
 }
 
+const videoBucket = process.env.REACT_APP_AWS_VIDEO_S3_BUCKET
+
 function useVideoData(userSub: string | null) {
   const [videoData, setVideoData] = useState<VideoData>({
     fetchedLikeCount: 0,
@@ -45,14 +47,21 @@ function useVideoData(userSub: string | null) {
         },
       })
 
-      const {title, url, videoKey, likes, dislikes} = response.body.videoInfo
+      const videoInfo = response.body?.videoInfo
+
+      if (!videoInfo) {
+        throw new Error('Invalid response from server')
+      }
+
+      const {title, url, videoKey, likes, dislikes} = videoInfo
+
       setVideoData({
         fetchedLikeCount: likes,
         fetchedDislikeCount: dislikes,
         activeBtn: response.body.userVote || 'none',
         videoId: videoKey,
         title,
-        url: await getFile(url),
+        url: await getFile(url, videoBucket!),
         loading: false,
         error: null,
       })
@@ -70,10 +79,10 @@ function useVideoData(userSub: string | null) {
     callLambdaFunction()
   }, [userSub])
 
-  async function getFile(key: string) {
+  async function getFile(key: string, bucket: string) {
     try {
       const file = await Storage.get(key, {
-        bucket: process.env.REACT_APP_AWS_VIDEO_S3_BUCKET,
+        bucket,
         customPrefix: {
           public: '',
         },

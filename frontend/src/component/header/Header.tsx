@@ -1,4 +1,4 @@
-import {faBars, faX} from '@fortawesome/free-solid-svg-icons'
+import {faBars, faTimes} from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {Link} from 'react-router-dom'
 import './header.css'
@@ -9,6 +9,12 @@ const Header = () => {
   const {user} = useAuthStatus()
   const {isOpen, toggleMenu} = useMenuToggle()
 
+  const menuItems = [
+    {path: '/', label: 'Home'},
+    {path: user ? '/profile' : '/login', label: user ? 'Profile' : 'Login'},
+    {path: '/video-upload', label: 'Submit a Video'},
+  ]
+
   return (
     <header className="header">
       <div className="header-container">
@@ -18,27 +24,16 @@ const Header = () => {
 
         <nav className={`navbar-menu ${isOpen ? 'active' : ''}`}>
           <ul className="navbar-list">
-            <li className="navbar-item">
-              <Link to="/" className="navbar-link" onClick={toggleMenu}>
-                Home
-              </Link>
-            </li>
-            <li className="navbar-item">
-              <Link
-                to={user ? '/profile' : '/login'}
-                className="navbar-link"
-                onClick={toggleMenu}>
-                {user ? 'Profile' : 'Login'}
-              </Link>
-            </li>
-            <li className="navbar-item">
-              <Link
-                to="/video-upload"
-                className="navbar-link"
-                onClick={toggleMenu}>
-                Submit a Video
-              </Link>
-            </li>
+            {menuItems.map((item, index) => (
+              <li className="navbar-item" key={index}>
+                <Link
+                  to={item.path}
+                  className="navbar-link"
+                  onClick={toggleMenu}>
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
 
@@ -48,11 +43,7 @@ const Header = () => {
           aria-expanded={isOpen}
           aria-label={isOpen ? 'Close Menu' : 'Open Menu'}
           onClick={toggleMenu}>
-          {isOpen ? (
-            <FontAwesomeIcon icon={faX} />
-          ) : (
-            <FontAwesomeIcon icon={faBars} />
-          )}
+          <FontAwesomeIcon icon={isOpen ? faTimes : faBars} />
         </button>
       </div>
     </header>

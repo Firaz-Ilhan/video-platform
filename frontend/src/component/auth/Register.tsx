@@ -25,14 +25,13 @@ const Register = () => {
     const {username, email, password} = data
 
     try {
-      const {user} = await Auth.signUp({
+      await Auth.signUp({
         username,
         password,
         attributes: {
           email,
         },
       })
-      console.log(user)
       navigate('/confirmation')
     } catch (error) {
       console.error('error signing up:', error)

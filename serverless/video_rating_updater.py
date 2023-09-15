@@ -15,6 +15,7 @@ DISLIKE = "dislike"
 REMOVE = "remove"
 ALLOWED_ACTIONS = [LIKE, DISLIKE, REMOVE]
 
+# schema for incoming events
 schema = {
     "type": "object",
     "properties": {
@@ -25,15 +26,17 @@ schema = {
     "required": ["videoKey", "action", "userId"],
 }
 
+
 def process_vote(event, votes_table, video_table):
+    # validate incoming event against schema
+    try:
+        validate(event, schema)
+    except SchemaValidationError as e:
+        return 400, str(e)
+
     video_key = event.get("videoKey")
     action = event.get("action")
     user_id = event.get("userId")
-
-    try:
-        validate(event=event, schema=schema)
-    except SchemaValidationError as e:
-        return 400, str(e)
 
     user_vote = votes_table.get_item(
         Key={"userId": user_id, "videoKey": video_key}

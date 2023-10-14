@@ -152,7 +152,10 @@
 }
 
 .error-message {
+  display: flex;
   font-weight: 600;
+  justify-content: center;
+  align-items: center;
 }
 
 .selected-file {

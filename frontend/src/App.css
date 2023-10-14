@@ -83,10 +83,6 @@ h2 {
   font-weight: 600;
 }
 
-label {
-  font-weight: 500;
-}
-
 .dashed {
   background-color: var(--background);
   border: 2px dashed var(--border);

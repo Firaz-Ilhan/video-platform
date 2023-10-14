@@ -19,6 +19,7 @@ const Register = () => {
   } = useForm<FormValues>()
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [registerError, setRegisterError] = useState('')
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true)
@@ -33,8 +34,9 @@ const Register = () => {
         },
       })
       navigate('/confirmation')
-    } catch (error) {
+    } catch (error: any) {
       console.error('error signing up:', error)
+      setRegisterError(error.message || 'An error occurred.')
     } finally {
       setIsLoading(false)
     }
@@ -94,6 +96,11 @@ const Register = () => {
             </div>
           )}
         </div>
+        {registerError && (
+          <div className="error" role="alert">
+            {registerError}
+          </div>
+        )}
         <LoadingButton type="submit" isLoading={isLoading}>
           Register
         </LoadingButton>

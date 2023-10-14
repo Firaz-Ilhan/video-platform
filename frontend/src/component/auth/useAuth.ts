@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { Auth } from 'aws-amplify';
-import { UsernamePasswordOpts } from '@aws-amplify/auth/lib-esm/types';
 
 const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const signIn = async (username: string | UsernamePasswordOpts, password: string | undefined) => {
+  const signIn = async (username: string, password: string | undefined) => {
     setIsLoading(true);
     try {
       await Auth.signIn(username, password);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('authentication error', error);
       return { success: false, error };
     } finally {
@@ -18,7 +17,7 @@ const useAuth = () => {
     }
   };
 
-  const signUp = async (username: any, email: any, password: any) => {
+  const signUp = async (username: string, email: string, password: string) => {
     setIsLoading(true);
     try {
       const { user } = await Auth.signUp({

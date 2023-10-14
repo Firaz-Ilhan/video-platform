@@ -8,8 +8,9 @@ const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({username: '', password: ''})
-  const navigate = useNavigate()
   const {isLoading, signIn} = useAuth()
+  const [loginError, setLoginError] = useState('')
+  const navigate = useNavigate()
 
   const validateForm = () => {
     let formIsValid = true
@@ -36,8 +37,12 @@ const Login = () => {
       return
     }
 
-    const {success} = await signIn(username, password)
-    if (success) navigate('/')
+    const {success, error} = await signIn(username, password)
+    if (success) {
+      navigate('/')
+    } else {
+      setLoginError(error.message || 'An error occurred during login.')
+    }
   }
 
   return (
@@ -71,6 +76,11 @@ const Login = () => {
             {errors.password}
           </div>
         </div>
+        {loginError && (
+          <div className="error" role="alert">
+            {loginError}
+          </div>
+        )}
         <LoadingButton type="submit" isLoading={isLoading}>
           Login
         </LoadingButton>
